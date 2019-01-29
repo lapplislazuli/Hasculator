@@ -9,11 +9,12 @@ data Term = Addition Term Term
             | Logarithm Term
             | Power Term Term
             | Value Literal
+            deriving (Eq,Show)
 
 data Literal =  Number Int
                 | Variable Char
                 | Constant Char
-
+                deriving (Eq,Show)
 
 constants :: [(Char,Double)]
 constants = ('e', (exp 1)):[]
@@ -38,4 +39,14 @@ resolveLiteral l cs =
     
 catchEmpty :: Maybe Double -> Double
 catchEmpty Nothing = 0
-catchEmpty (Just a) = a 
+catchEmpty (Just a) = a
+
+simplify :: Term -> Term
+simplify (Addition t (Value (Number 0))) = t
+simplify (Multiplication t (Value (Number 1))) = t 
+simplify (Multiplication t (Value (Number 0))) = Value (Number 0)
+simplify (Power _ (Value (Number 0))) = Value (Number 1)
+simplify (Power t (Value (Number 1))) = t
+simplify (Logarithm (Value (Number 1))) = Value (Number 0)
+
+simplify t = t
