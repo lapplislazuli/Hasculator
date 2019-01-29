@@ -42,11 +42,19 @@ catchEmpty Nothing = 0
 catchEmpty (Just a) = a
 
 simplify :: Term -> Term
-simplify (Addition t (Value (Number 0))) = t
-simplify (Multiplication t (Value (Number 1))) = t 
+--Things i can really simplify
+simplify (Addition t (Value (Number 0))) = simplify t
+simplify (Multiplication t (Value (Number 1))) = simplify t 
 simplify (Multiplication t (Value (Number 0))) = Value (Number 0)
 simplify (Power _ (Value (Number 0))) = Value (Number 1)
-simplify (Power t (Value (Number 1))) = t
+simplify (Power t (Value (Number 1))) = simplify t
 simplify (Logarithm (Value (Number 1))) = Value (Number 0)
-
+simplify (Division a (Value (Number 1))) = a 
+simplify (Division (Value (Number 0)) _ ) = Value (Number 0) 
+-- Simplify one layer deeper
+simplify (Addition a b) = Addition (simplify a) (simplify b)
+simplify (Substraction a b) = Substraction (simplify a) (simplify b)
+simplify (Multiplication a b) = Multiplication (simplify a) (simplify b)
+simplify (Division a b) = Division (simplify a) (simplify b)
+-- If i got nothing else 
 simplify t = t
