@@ -3,24 +3,27 @@ module Differentiator where
 
 import Terms
 
-diff :: Term -> Term
-diff t =
+diff :: Term -> Char -> Term
+diff t c=
     simplify (
         case t of 
-            Addition a b -> Addition (diff a) (diff b)
-            Substraction a b -> Substraction (diff a) (diff b)
-            Multiplication (Value (Number n)) t -> Multiplication (Value (Number n)) (diff t)
-            Multiplication a b -> Addition (Multiplication (diff a) b) (Multiplication a (diff b) )
-            Division a b -> Division (Substraction (Multiplication (diff a) b) (Multiplication a (diff b) )) (Multiplication b b)
-            Logarithm t -> Division (diff t) t
-            Power (Value (Variable c)) (Value (Number n)) -> Multiplication (Value (Number n)) (Power (Value (Variable c)) (Value (Number (n-1) )) )
-            Power a b -> Multiplication (Power (diff a) b) (diff b)
-            Value l -> Value (diffLiteral l)
+            Addition a b -> Addition (diff a c ) (diff b c)
+            Substraction a b -> Substraction (diff a c ) (diff b c )
+            Multiplication (Value (Number n)) t -> Multiplication (Value (Number n)) (diff t c )
+            Multiplication a b -> Addition (Multiplication (diff a c) b) (Multiplication a (diff b c) )
+            Division a b -> Division (Substraction (Multiplication (diff a c ) b) (Multiplication a (diff b c )) ) (Multiplication b b)
+            Logarithm t -> Division (diff t c) t
+            Power (Value (Variable v)) (Value (Number n)) -> 
+                if c == v 
+                then Multiplication (Value (Number n)) (Power (Value (Variable v)) (Value (Number (n-1) )) )
+                else undefined -- TODO: a^3 * x dx = a ^ 3
+            Power a b -> Multiplication (Power (diff a c) b) (diff b c)
+            Value l -> Value (diffLiteral l c)
     )
 
-diffLiteral :: Literal -> Literal
-diffLiteral l = 
-    case l of 
-        Number l -> Number 0
-        Constant c -> Number 0
-        Variable v -> Number 1
+diffLiteral :: Literal -> Char -> Literal
+diffLiteral (Variable v) c = 
+    if v==c 
+        then Number 1 
+        else Number 0
+diffLiteral _ _ = Number 0

@@ -41,6 +41,17 @@ catchEmpty :: Maybe Double -> Double
 catchEmpty Nothing = 0
 catchEmpty (Just a) = a
 
+extractVariables :: Term -> [Char]
+extractVariables (Value (Variable c)) = c:[]
+extractVariables (Value (Number _)) = [] -- Any Value that is not a variable will yield []
+extractVariables (Value (Constant _)) = [] -- Any Value that is not a variable will yield []
+extractVariables (Addition a b) = extractVariables a ++ extractVariables b
+extractVariables (Substraction a b) = extractVariables a ++ extractVariables b
+extractVariables (Multiplication a b) = extractVariables a ++ extractVariables b
+extractVariables (Division a b) = extractVariables a ++ extractVariables b
+extractVariables (Power a b) = extractVariables a ++ extractVariables b
+extractVariables (Logarithm a)  = extractVariables a
+
 simplify :: Term -> Term
 --Things i can really simplify
 simplify (Addition t (Value (Number 0))) = simplify t
