@@ -7,23 +7,28 @@ diff :: Term -> Char -> Term
 diff t c=
     simplify (
         case t of 
-            Addition a b -> Addition (diff a c ) (diff b c)
-            Substraction a b -> Substraction (diff a c ) (diff b c )
-            Multiplication (Value (Number n)) t -> Multiplication (Value (Number n)) (diff t c )
-            Multiplication a b -> Addition (Multiplication (diff a c) b) (Multiplication a (diff b c) )
-            Division a b -> Division (Substraction (Multiplication (diff a c ) b) (Multiplication a (diff b c )) ) (Multiplication b b)
-            Logarithm t -> Division (diff t c) t
-            Power (Value (Variable v)) (Value (Number n)) -> 
+            Add a b -> Add (diff a c ) (diff b c)
+            Sub a b -> Sub (diff a c ) (diff b c )
+            Mul (Numb n) t -> Mul (Numb n) (diff t c )
+            Mul a b -> Add (Mul (diff a c) b) (Mul a (diff b c) )
+            Div a b -> Div (Sub (Mul (diff a c ) b) (Mul a (diff b c )) ) (Mul b b)
+            Ln t -> Div (diff t c) t
+            Pow (Var v) (Numb n) -> 
                 if c == v 
-                then Multiplication (Value (Number n)) (Power (Value (Variable v)) (Value (Number (n-1) )) )
+                then Mul (Numb n) (Pow (Var v) (Numb (n-1) ) )
                 else undefined -- TODO: a^3 * x dx = a ^ 3
-            Power a b -> Multiplication (Power (diff a c) b) (diff b c)
-            Value l -> Value (diffLiteral l c)
+            Pow a b -> Mul (Pow (diff a c) b) (diff b c)
+            Const c -> Numb 0
+            Numb n -> Numb 0
+            Var v -> diffVariable v c
     )
 
-diffLiteral :: Literal -> Char -> Literal
-diffLiteral (Variable v) c = 
-    if v==c 
-        then Number 1 
-        else Number 0
-diffLiteral _ _ = Number 0
+diffVariable :: Char -> Char -> Term
+diffVariable v c =
+        if (v == c) 
+            then Numb 1 
+            else Numb 0
+
+--Shortcut for diffing x
+dx :: Term -> Term
+dx t = diff t 'x'

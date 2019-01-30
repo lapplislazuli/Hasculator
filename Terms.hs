@@ -2,19 +2,17 @@
 
 module Terms where
 
-data Term = Addition Term Term
-            | Substraction Term Term
-            | Multiplication Term Term
-            | Division Term Term
-            | Logarithm Term
-            | Power Term Term
-            | Value Literal
+data Term = Add Term Term
+            | Sub Term Term
+            | Mul Term Term
+            | Div Term Term
+            | Ln Term
+            | Pow Term Term
+            | Numb Double
+            | Const Char
+            | Var Char
             deriving (Eq,Show)
 
-data Literal =  Number Int
-                | Variable Char
-                | Constant Char
-                deriving (Eq,Show)
 
 constants :: [(Char,Double)]
 constants = ('e', (exp 1)):[]
@@ -28,44 +26,36 @@ resolveVariable i ((c,v):vs) =
     if i == c 
     then Just v 
     else resolveVariable i vs
-
-
-resolveLiteral :: Literal ->[(Char,Double)] -> Double
-resolveLiteral l cs = 
-    case l of 
-        Number n -> (fromIntegral n)
-        Constant c -> catchEmpty (resolveConstant c)
-        Variable v -> catchEmpty (resolveVariable v cs)
     
 catchEmpty :: Maybe Double -> Double
 catchEmpty Nothing = 0
 catchEmpty (Just a) = a
 
 extractVariables :: Term -> [Char]
-extractVariables (Value (Variable c)) = c:[]
-extractVariables (Value (Number _)) = [] -- Any Value that is not a variable will yield []
-extractVariables (Value (Constant _)) = [] -- Any Value that is not a variable will yield []
-extractVariables (Addition a b) = extractVariables a ++ extractVariables b
-extractVariables (Substraction a b) = extractVariables a ++ extractVariables b
-extractVariables (Multiplication a b) = extractVariables a ++ extractVariables b
-extractVariables (Division a b) = extractVariables a ++ extractVariables b
-extractVariables (Power a b) = extractVariables a ++ extractVariables b
-extractVariables (Logarithm a)  = extractVariables a
+extractVariables (Var c) = c:[]
+extractVariables (Numb _) = [] -- Any Value that is not a variable will yield []
+extractVariables (Const _) = [] -- Any Value that is not a variable will yield []
+extractVariables (Add a b) = extractVariables a ++ extractVariables b
+extractVariables (Sub a b) = extractVariables a ++ extractVariables b
+extractVariables (Mul a b) = extractVariables a ++ extractVariables b
+extractVariables (Div a b) = extractVariables a ++ extractVariables b
+extractVariables (Pow a b) = extractVariables a ++ extractVariables b
+extractVariables (Ln a)  = extractVariables a
 
 simplify :: Term -> Term
 --Things i can really simplify
-simplify (Addition t (Value (Number 0))) = simplify t
-simplify (Multiplication t (Value (Number 1))) = simplify t 
-simplify (Multiplication t (Value (Number 0))) = Value (Number 0)
-simplify (Power _ (Value (Number 0))) = Value (Number 1)
-simplify (Power t (Value (Number 1))) = simplify t
-simplify (Logarithm (Value (Number 1))) = Value (Number 0)
-simplify (Division a (Value (Number 1))) = a 
-simplify (Division (Value (Number 0)) _ ) = Value (Number 0) 
+simplify (Add t (Numb 0)) = simplify t
+simplify (Mul t (Numb 1)) = simplify t 
+simplify (Mul t (Numb 0)) = Numb 0
+simplify (Pow _ (Numb 0)) = Numb 1
+simplify (Pow t (Numb 1)) = simplify t
+simplify (Ln (Numb 1)) = Numb 0
+simplify (Div a (Numb 1)) = a 
+simplify (Div (Numb 0) _ ) = Numb 0
 -- Simplify one layer deeper
-simplify (Addition a b) = Addition (simplify a) (simplify b)
-simplify (Substraction a b) = Substraction (simplify a) (simplify b)
-simplify (Multiplication a b) = Multiplication (simplify a) (simplify b)
-simplify (Division a b) = Division (simplify a) (simplify b)
+simplify (Add a b) = Add (simplify a) (simplify b)
+simplify (Sub a b) = Sub (simplify a) (simplify b)
+simplify (Mul a b) = Mul (simplify a) (simplify b)
+simplify (Div a b) = Div (simplify a) (simplify b)
 -- If i got nothing else 
 simplify t = t
