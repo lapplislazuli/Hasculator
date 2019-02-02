@@ -9,18 +9,18 @@ data Term = Add Term Term
             | Ln Term
             | Pow Term Term
             | Numb Double
-            | Const Char
-            | Var Char
+            | Const String
+            | Var String
             deriving (Eq,Show)
 
 
-constants :: [(Char,Double)]
-constants = ('e', (exp 1)):[]
+constants :: [(String,Double)]
+constants = (['e'], (exp 1)):[]
 
-resolveConstant :: Char -> Maybe Double
+resolveConstant :: String -> Maybe Double
 resolveConstant c = resolveVariable c constants
 
-resolveVariable :: Char -> [(Char,Double)] -> Maybe Double
+resolveVariable :: String -> [(String,Double)] -> Maybe Double
 resolveVariable _ [] = Nothing
 resolveVariable i ((c,v):vs) = 
     if i == c 
@@ -31,7 +31,7 @@ catchEmpty :: Maybe Double -> Double
 catchEmpty Nothing = 0
 catchEmpty (Just a) = a
 
-extractVariables :: Term -> [Char]
+extractVariables :: Term -> [String]
 extractVariables (Var c) = c:[]
 extractVariables (Numb _) = [] -- Any Value that is not a variable will yield []
 extractVariables (Const _) = [] -- Any Value that is not a variable will yield []

@@ -3,7 +3,7 @@ module Solve where
 
 import Terms
 
-solve :: Term -> [(Char,Double)]-> Double
+solve :: Term -> [(String,Double)]-> Double
 solve t vars = 
     case t of
         Add a b -> solve a vars + solve b vars

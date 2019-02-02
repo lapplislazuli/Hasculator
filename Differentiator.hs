@@ -3,7 +3,7 @@ module Differentiator where
 
 import Terms
 
-diff :: Term -> Char -> Term
+diff :: Term -> String -> Term
 diff t c=
     simplify (
         case t of 
@@ -23,7 +23,7 @@ diff t c=
             Var v -> diffVariable v c
     )
 
-diffVariable :: Char -> Char -> Term
+diffVariable :: String -> String -> Term
 diffVariable v c =
         if (v == c) 
             then Numb 1 
@@ -31,4 +31,4 @@ diffVariable v c =
 
 --Shortcut for diffing x
 dx :: Term -> Term
-dx t = diff t 'x'
+dx t = diff t ['x']

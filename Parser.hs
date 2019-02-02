@@ -38,7 +38,7 @@ tokenToTerm :: Token -> Term
 tokenToTerm [] = Numb 0
 tokenToTerm t@(s:ss) = if (not (elem s ['a'..'z'])) --s is a number, or atleast not a char
                         then Numb (read t)
-                        else Var s --TODO: Catch Constants here
+                        else Var t --TODO: Catch Constants here
 
 -- For testing purposes and to show general flow
 initialParse :: String -> [Either Operator Term]
