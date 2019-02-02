@@ -1,6 +1,6 @@
 module Calculator where
 
 import Differentiator
-import Solve
+import Solver
 import Terms
 import Parser

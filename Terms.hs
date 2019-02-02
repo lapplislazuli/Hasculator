@@ -42,6 +42,22 @@ extractVariables (Div a b) = extractVariables a ++ extractVariables b
 extractVariables (Pow a b) = extractVariables a ++ extractVariables b
 extractVariables (Ln a)  = extractVariables a
 
+hasVariables :: Term -> Bool
+hasVariables t = (extractVariables t)== []
+
+solve :: Term -> [(String,Double)]-> Double
+solve t vars = 
+    case t of
+        Add a b -> solve a vars + solve b vars
+        Sub a b -> solve a vars - solve b vars
+        Mul a b -> solve a vars * solve b vars
+        Div a b  -> solve a vars / solve b vars
+        Ln t -> log (solve t vars)
+        Pow a b -> (solve a vars ** (solve b vars))
+        Numb n -> n 
+        Const c -> catchEmpty (resolveConstant c)
+        Var v -> catchEmpty (resolveVariable v vars)
+
 simplify :: Term -> Term
 --Things i can really simplify
 simplify (Add t (Numb 0)) = simplify t
@@ -58,4 +74,6 @@ simplify (Sub a b) = Sub (simplify a) (simplify b)
 simplify (Mul a b) = Mul (simplify a) (simplify b)
 simplify (Div a b) = Div (simplify a) (simplify b)
 -- If i got nothing else 
-simplify t = t
+simplify t = if (not (hasVariables t))
+             then Numb (solve t [])
+             else t
