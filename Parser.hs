@@ -1,5 +1,4 @@
 -- This module parses Strings to Terms
--- It contains tokens and Operators
 module Parser where 
 
 import Data.Maybe (fromJust)
@@ -19,27 +18,6 @@ data Operator = Plus
                 | Lbr
                 | Rbr
                 deriving (Eq,Show)           
-
-tokenToOperator :: Token -> Either Operator Token
-tokenToOperator t = 
-    let mop = lookup t operators
-    in 
-        if mop == Nothing
-        then Right t 
-        else Left (fromJust mop)
-    where operators = [("(",Lbr),(")",Rbr),("Ln",LnE),("**",StarStar),("*",Star),("/",DivSlash),("+",Plus),("-",Minus)]
-
-
-detectVarsAndNumbers :: [Either Operator Token] -> [Either Operator Term]
-detectVarsAndNumbers [] = []
-detectVarsAndNumbers ((Left e):es) = (Left e) : detectVarsAndNumbers es 
-detectVarsAndNumbers ((Right e):es) = (Right (tokenToTerm e)) : (detectVarsAndNumbers es)
-
-tokenToTerm :: Token -> Term
-tokenToTerm [] = Numb 0
-tokenToTerm t@(s:ss) = if (not (elem s ['a'..'z'])) --s is a number, or atleast not a char
-                        then Numb (read t)
-                        else Var t --TODO: Catch Constants here
 
 -- For testing purposes and to show general flow
 initialParse :: String -> [Either Operator Term]
@@ -80,13 +58,39 @@ termify t = let
                                 DivSlash -> termify (lleft ++ Right (Div lcasted rcasted) : rleft)
                                 -- Any other stuff ?
                                 otherwise -> undefined
-                    else undefined
+                    else 
+                        case op of 
+                            Lbr -> termify (lhs ++ [Right (termify rhs)])
+                            Rbr -> termify (Right (termify lhs) : rhs)
+                            otherwise -> undefined 
+                            -- TODO Something is wrong with "Ending with )" 
 
 tokenize :: String -> [Token]
 tokenize s = words s 
 
+tokenToOperator :: Token -> Either Operator Token
+tokenToOperator t = 
+    let mop = lookup t operators
+    in 
+        if mop == Nothing
+        then Right t 
+        else Left (fromJust mop)
+    where operators = [("(",Lbr),(")",Rbr),("Ln",LnE),("**",StarStar),("*",Star),("/",DivSlash),("+",Plus),("-",Minus)]
+
+detectVarsAndNumbers :: [Either Operator Token] -> [Either Operator Term]
+detectVarsAndNumbers [] = []
+detectVarsAndNumbers ((Left e):es) = (Left e) : detectVarsAndNumbers es 
+detectVarsAndNumbers ((Right e):es) = (Right (tokenToTerm e)) : (detectVarsAndNumbers es)
+
+tokenToTerm :: Token -> Term
+tokenToTerm [] = Numb 0
+tokenToTerm t@(s:ss) = if (not (elem s ['a'..'z'])) --s is a number, or atleast not a char
+                        then Numb (read t)
+                        else Var t --TODO: Catch Constants here
+
 -- Assings the priority of each Term or Operator to the Term or operator
 -- I left some out, i case i want to add more or i forgot something
+--TODO: Do this with a List as Input 
 precedence :: Either Operator Term -> (Int, Either Operator Term)
 -- Finished Terms have the "lowest" Priority marked as 15
 precedence (Right t) = (15, Right t)
@@ -106,17 +110,9 @@ precedence (Left o) = (priorityOf o, Left o)
                     
 -- I Split by the Operator with the highest Priority and Return a Combination of the LefthandSide, Operator and RighthandSide
 splitByFirst :: [Either Operator Term] -> Either Operator Term -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
-splitByFirst [] _ = undefined
 splitByFirst t ops = 
                 let (p:ps) = splitOn [ops] t
-                in (p, ops, operatorConc ops ps)
-
--- This method combines Terms i've splitted above 
--- It's important to include the operator again
-operatorConc :: Either Operator Term -> [[Either Operator Term]] -> [Either Operator Term]
-operatorConc _ [] = []
-operatorConc _ [d] = d
-operatorConc op (d:ds) = d++[op]++(operatorConc op ds)
+                in (p, ops, intercalate [ops] ps)
 
 firstOperator :: [Either Operator Term] -> Either Operator Term
 firstOperator os =
