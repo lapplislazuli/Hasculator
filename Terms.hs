@@ -60,11 +60,11 @@ solve t vars =
 
 simplify :: Term -> Term
 --Things i can really simplify
-simplify (Add t (Numb 0)) = simplify t
-simplify (Mul t (Numb 1)) = simplify t 
+simplify (Add t (Numb 0)) = t
+simplify (Mul t (Numb 1)) = t 
 simplify (Mul t (Numb 0)) = Numb 0
 simplify (Pow _ (Numb 0)) = Numb 1
-simplify (Pow t (Numb 1)) = simplify t
+simplify (Pow t (Numb 1)) =  t
 simplify (Ln (Numb 1)) = Numb 0
 simplify (Div a (Numb 1)) = a 
 simplify (Div (Numb 0) _ ) = Numb 0
@@ -73,7 +73,9 @@ simplify (Add a b) = Add (simplify a) (simplify b)
 simplify (Sub a b) = Sub (simplify a) (simplify b)
 simplify (Mul a b) = Mul (simplify a) (simplify b)
 simplify (Div a b) = Div (simplify a) (simplify b)
+--TODO: Partial Solving nulled a lot of stuff and killed variables
+--simplify t = if (not (hasVariables t))
+--             then Numb (solve t [])
+--             else t
 -- If i got nothing else 
-simplify t = if (not (hasVariables t))
-             then Numb (solve t [])
-             else t
+simplify t = t 
