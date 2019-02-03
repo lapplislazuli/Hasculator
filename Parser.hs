@@ -95,6 +95,7 @@ termify t = let
                                 -- Unary Operator
                                 LnE -> termify (lhs ++ (15,Right (Ln rcasted)) : rleft)
                                 -- Binary Operator
+                                StarStar -> termify (lleft ++ (15,Right (Pow lcasted rcasted)) : rleft)
                                 Plus -> termify (lleft ++ (15,Right (Add lcasted rcasted)) : rleft)
                                 Minus -> termify (lleft ++ (15,Right (Sub lcasted rcasted)) : rleft)
                                 Star -> termify (lleft ++ (15,Right (Mul lcasted rcasted)) : rleft)
@@ -106,12 +107,16 @@ termify t = let
 -- I Split by the Operator with the highest Priority and Return a Combination of the LefthandSide, Operator and RighthandSide
 splitByFirst :: [(Int,Either Operator Term)] -> (Int,Either Operator Term) -> ([(Int,Either Operator Term)],Either Operator Term,[(Int,Either Operator Term)])
 splitByFirst [] ops@(_,fst) = undefined
-splitByFirst t@(x:xs) ops@(_,fst) = 
+splitByFirst t@(x:xs) ops@(i,fst) = 
                         let (p:ps) = splitOn [ops] t
-                        in (p, fst, localConc ps )
-                        where localConc (d:ds) = d++ (localConc ds)
-                              localConc [] = []
+                        in (p, fst, operatorConc ops ps)
 
+-- This method combines Terms i've splitted above 
+-- It's important to include the operator again
+operatorConc :: (Int,Either Operator Term) -> [[(Int,Either Operator Term)]] -> [(Int,Either Operator Term)]
+operatorConc _ [] = []
+operatorConc _ [d] = d
+operatorConc op (d:ds) = d++[op]++(operatorConc op ds)
 
 firstOperator :: [(Int,Either Operator Term)] -> (Int,Either Operator Term)
 firstOperator l@((i,t):xs) = 
