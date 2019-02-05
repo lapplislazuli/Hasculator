@@ -23,66 +23,23 @@ data Operator = Plus
 initialParse :: String -> [Either Operator Term]
 initialParse s = detectVarsAndNumbers (map tokenToOperator (tokenize s))
 
-termify:: [Either Operator Term] -> Term 
-termify [] = undefined
--- I've reached a core-term, such as a variable or a Number
+termify :: [Either Operator Term] -> Term
 termify [Right t] = t
--- I've got Operators
-termify t = let 
-                fst = firstOperator t
-                (lhs,Left op,rhs) = splitByFirst t fst 
-                lnb' = last lhs --TODO: Use Safe Last!
-                rnb' = head rhs --TODO: Use Safe Head!
-                lleft = take (length lhs -1) lhs 
-                rleft = drop 1 rhs 
-            in 
-                -- I check if i reached a term
-                if (isRight fst)
-                then termify [fst]
-                else
-                    -- I check if my neigboors are Terms?
-                    if((isRight lnb') && (isRight rnb'))
-                    then 
-                        let 
-                            lcasted = fromRight (Numb 0) lnb'
-                            rcasted = fromRight (Numb 0) rnb'
-                        in
-                            case op of 
-                                -- Unary Operator
-                                LnE -> termify (lhs ++ Right (Ln rcasted) : rleft)
-                                -- Binary Operator
-                                StarStar -> termify (lleft ++ Right (Pow lcasted rcasted) : rleft)
-                                Plus -> termify (lleft ++ Right (Add lcasted rcasted) : rleft)
-                                Minus -> termify (lleft ++ Right (Sub lcasted rcasted) : rleft)
-                                Star -> termify (lleft ++ Right (Mul lcasted rcasted) : rleft)
-                                DivSlash -> termify (lleft ++ Right (Div lcasted rcasted) : rleft)
-                                -- Any other stuff ?
-                                otherwise -> undefined
-                    else 
-                        case op of 
-                            Lbr -> termify (lhs ++ [Right (termify rhs)])
-                            Rbr -> termify (Right (termify lhs) : rhs)
-                            otherwise -> undefined 
-                            -- TODO Something is wrong with "Ending with )" 
-                            -- Maybe this is just inherited from above, as i maybe not have lnb's and rnb's 
-
-termify2 :: [Either Operator Term] -> Term
-termify2 [Right t] = t
-termify2 toks = 
+termify toks = 
     let 
         fst = firstOperator toks
         (lhs,Left op,rhs) = splitByFirst toks fst
     in 
         case op of 
-            Lbr -> termify2 (lhs ++ [Right (termify rhs)])
-            Rbr -> termify2 (Right (termify lhs) : rhs)
+            Lbr -> termify (lhs ++ [Right (termify rhs)])
+            Rbr -> termify (Right (termify lhs) : rhs)
             _ | (elem op unaries) ->
                 let 
                     rnb = head rhs 
                     rhs' = tail rhs
                     step = termifyUnary op (fromRight' rnb)
                 in 
-                    termify2 (lhs ++ (Right step) : rhs') 
+                    termify (lhs ++ (Right step) : rhs') 
               | (elem op binaries) -> 
                 let
                     rnb  = fromRight' (head rhs) 
@@ -91,7 +48,7 @@ termify2 toks =
                     lhs' = init lhs
                     step = termifyBinary lnb op rnb 
                 in
-                    termify2 (lhs' ++ [Right step] ++ rhs')
+                    termify (lhs' ++ [Right step] ++ rhs')
             otherwise       -> 
                 Var "Err" --does this ever happen? Is this Smart?
     where 
