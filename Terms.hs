@@ -1,6 +1,14 @@
 -- This Module defines my own Datatype Term
 
-module Terms where
+module Terms 
+    (
+        Term(..),
+        solve,
+        simplify, 
+        extractVariables,
+        hasVariables
+    )
+where
 
 data Term = Add Term Term
             | Sub Term Term
@@ -12,38 +20,6 @@ data Term = Add Term Term
             | Const String
             | Var String
             deriving (Eq,Show)
-
-
-constants :: [(String,Double)]
-constants = (['e'], (exp 1)):[]
-
-resolveConstant :: String -> Maybe Double
-resolveConstant c = resolveVariable c constants
-
-resolveVariable :: String -> [(String,Double)] -> Maybe Double
-resolveVariable _ [] = Nothing
-resolveVariable i ((c,v):vs) = 
-    if i == c 
-    then Just v 
-    else resolveVariable i vs
-    
-catchEmpty :: Maybe Double -> Double
-catchEmpty Nothing = 0
-catchEmpty (Just a) = a
-
-extractVariables :: Term -> [String]
-extractVariables (Var c) = c:[]
-extractVariables (Numb _) = [] -- Any Value that is not a variable will yield []
-extractVariables (Const _) = [] -- Any Value that is not a variable will yield []
-extractVariables (Add a b) = extractVariables a ++ extractVariables b
-extractVariables (Sub a b) = extractVariables a ++ extractVariables b
-extractVariables (Mul a b) = extractVariables a ++ extractVariables b
-extractVariables (Div a b) = extractVariables a ++ extractVariables b
-extractVariables (Pow a b) = extractVariables a ++ extractVariables b
-extractVariables (Ln a)  = extractVariables a
-
-hasVariables :: Term -> Bool
-hasVariables t = (extractVariables t)== []
 
 solve :: Term -> [(String,Double)]-> Double
 solve t vars = 
@@ -59,32 +35,60 @@ solve t vars =
         Var v -> catchEmpty (resolveVariable v vars)
 
 simplify :: Term -> Term
--- Basics 
-simplify (Var c) = Var c 
-simplify (Const c) = Const c 
-simplify (Numb i) = Numb i
-
---Things i can really simplify
-simplify (Add t (Numb 0)) = t
-simplify (Add (Numb 0) t) = t
-simplify (Mul t (Numb 1)) = t
-simplify (Mul (Numb 1) t) = t 
-simplify (Mul t (Numb 0)) = Numb 0
-simplify (Mul (Numb 0) t) = Numb 0
-simplify (Pow _ (Numb 0)) = Numb 1
-simplify (Pow t (Numb 1)) =  t
-simplify (Ln (Numb 1)) = Numb 0
-simplify (Div a (Numb 1)) = a 
-simplify (Div (Numb 0) _ ) = Numb 0
-
--- Simplify one layer deeper
-simplify (Add a b) = Add (simplify a) (simplify b)
-simplify (Sub a b) = Sub (simplify a) (simplify b)
-simplify (Mul a b) = Mul (simplify a) (simplify b)
-simplify (Div a b) = Div (simplify a) (simplify b)
-simplify (Pow a b) = Pow (simplify a) (simplify b)
-simplify (Ln t) = Ln (simplify t)
-
-simplify t = if (not (hasVariables t))
+simplify t = 
+    if (not (hasVariables t))
     then Numb (solve t [])
-    else t
+    else 
+        case t of
+            -- Basics 
+            (Var c) -> Var c 
+            (Const c) -> Const c 
+            (Numb i) -> Numb i
+            -- Simple Shortcuts
+            (Add t (Numb 0))    -> t
+            (Add (Numb 0) t)    -> t
+            (Mul t (Numb 1))    -> t
+            (Mul (Numb 1) t)    -> t 
+            (Mul t (Numb 0))    -> Numb 0
+            (Mul (Numb 0) t)    -> Numb 0
+            (Pow _ (Numb 0))    -> Numb 1
+            (Pow t (Numb 1))    ->  t
+            (Ln (Numb 1))       -> Numb 0
+            (Div a (Numb 1))    -> a 
+            (Div (Numb 0) _ )   -> Numb 0 
+            -- No Shortcuts found - go one layer deeper
+            (Add a b)   -> Add (simplify a) (simplify b)
+            (Sub a b)   -> Sub (simplify a) (simplify b)
+            (Mul a b)   -> Mul (simplify a) (simplify b)
+            (Div a b)   -> Div (simplify a) (simplify b)
+            (Pow a b)   -> Pow (simplify a) (simplify b)
+            (Ln t)      -> Ln (simplify t)
+
+extractVariables :: Term -> [String]
+extractVariables (Var c) = c:[]
+extractVariables (Numb _) = [] -- Any Value that is not a variable will yield []
+extractVariables (Const _) = [] -- Any Value that is not a variable will yield []
+extractVariables (Add a b) = extractVariables a ++ extractVariables b
+extractVariables (Sub a b) = extractVariables a ++ extractVariables b
+extractVariables (Mul a b) = extractVariables a ++ extractVariables b
+extractVariables (Div a b) = extractVariables a ++ extractVariables b
+extractVariables (Pow a b) = extractVariables a ++ extractVariables b
+extractVariables (Ln a)  = extractVariables a
+
+hasVariables :: Term -> Bool
+hasVariables t =  length (extractVariables t) > 0
+            
+resolveConstant :: String -> Maybe Double
+resolveConstant c = resolveVariable c constants
+    where constants = (['e'], (exp 1)):[]
+
+resolveVariable :: String -> [(String,Double)] -> Maybe Double
+resolveVariable _ [] = Nothing
+resolveVariable i ((c,v):vs) = 
+    if i == c 
+    then Just v 
+    else resolveVariable i vs
+    
+catchEmpty :: Maybe Double -> Double
+catchEmpty Nothing = 0
+catchEmpty (Just a) = a
