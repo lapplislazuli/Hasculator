@@ -59,23 +59,32 @@ solve t vars =
         Var v -> catchEmpty (resolveVariable v vars)
 
 simplify :: Term -> Term
+-- Basics 
+simplify (Var c) = Var c 
+simplify (Const c) = Const c 
+simplify (Numb i) = Numb i
+
 --Things i can really simplify
 simplify (Add t (Numb 0)) = t
-simplify (Mul t (Numb 1)) = t 
+simplify (Add (Numb 0) t) = t
+simplify (Mul t (Numb 1)) = t
+simplify (Mul (Numb 1) t) = t 
 simplify (Mul t (Numb 0)) = Numb 0
+simplify (Mul (Numb 0) t) = Numb 0
 simplify (Pow _ (Numb 0)) = Numb 1
 simplify (Pow t (Numb 1)) =  t
 simplify (Ln (Numb 1)) = Numb 0
 simplify (Div a (Numb 1)) = a 
 simplify (Div (Numb 0) _ ) = Numb 0
+
 -- Simplify one layer deeper
 simplify (Add a b) = Add (simplify a) (simplify b)
 simplify (Sub a b) = Sub (simplify a) (simplify b)
 simplify (Mul a b) = Mul (simplify a) (simplify b)
 simplify (Div a b) = Div (simplify a) (simplify b)
---TODO: Partial Solving nulled a lot of stuff and killed variables
---simplify t = if (not (hasVariables t))
---             then Numb (solve t [])
---             else t
--- If i got nothing else 
-simplify t = t 
+simplify (Pow a b) = Pow (simplify a) (simplify b)
+simplify (Ln t) = Ln (simplify t)
+
+simplify t = if (not (hasVariables t))
+    then Numb (solve t [])
+    else t

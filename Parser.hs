@@ -31,8 +31,8 @@ termify [Right t] = t
 termify t = let 
                 fst = firstOperator t
                 (lhs,Left op,rhs) = splitByFirst t fst 
-                lnb' = last lhs 
-                rnb'= head rhs 
+                lnb' = last lhs --TODO: Use Safe Last!
+                rnb' = head rhs --TODO: Use Safe Head!
                 lleft = take (length lhs -1) lhs 
                 rleft = drop 1 rhs 
             in 
@@ -64,6 +64,57 @@ termify t = let
                             Rbr -> termify (Right (termify lhs) : rhs)
                             otherwise -> undefined 
                             -- TODO Something is wrong with "Ending with )" 
+                            -- Maybe this is just inherited from above, as i maybe not have lnb's and rnb's 
+
+termify2 :: [Either Operator Term] -> Term
+termify2 [Right t] = t
+termify2 toks = 
+    let 
+        fst = firstOperator toks
+        (lhs,Left op,rhs) = splitByFirst toks fst
+    in 
+        case op of 
+            Lbr -> termify2 (lhs ++ [Right (termify rhs)])
+            Rbr -> termify2 (Right (termify lhs) : rhs)
+            _ | (elem op unaries) ->
+                let 
+                    rnb = head rhs 
+                    rhs' = tail rhs
+                    step = termifyUnary op (fromRight' rnb)
+                in 
+                    termify2 (lhs ++ (Right step) : rhs') 
+              | (elem op binaries) -> 
+                let
+                    rnb  = fromRight' (head rhs) 
+                    rhs' = tail rhs
+                    lnb  = fromRight' (last lhs) 
+                    lhs' = init lhs
+                    step = termifyBinary lnb op rnb 
+                in
+                    termify2 (lhs' ++ [Right step] ++ rhs')
+            otherwise       -> 
+                Var "Err" --does this ever happen? Is this Smart?
+    where 
+        binaries = [Plus,Minus,Star,StarStar,DivSlash] 
+        unaries  = [LnE]    
+
+termifyUnary :: Operator -> Term -> Term 
+termifyUnary op t = 
+    case op of 
+        LnE     -> Ln t 
+        -- Additional Unary Operators
+        -- TODO: Negating
+
+termifyBinary :: Term -> Operator -> Term -> Term 
+termifyBinary a op b =
+    case op of 
+        StarStar    -> Pow a b
+        Star        -> Mul a b 
+        DivSlash    -> Div a b 
+        Plus        -> Add a b
+        Minus       -> Sub a b
+        -- Additional Binary Operators 
+
 
 tokenize :: String -> [Token]
 tokenize s = words s 
@@ -135,3 +186,5 @@ lowestPrio ((i,t):xs) = min i (lowestPrio xs)
 fromRight :: b -> Either a b -> b 
 fromRight def (Right b) = b 
 fromRight def (Left a) = def
+
+fromRight' = fromRight (Var "Err")
