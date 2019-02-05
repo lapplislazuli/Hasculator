@@ -1,8 +1,13 @@
 -- This module parses Strings to Terms
-module Parser where 
+module Parser 
+    (
+        parse
+    ) 
+where 
 
 import Data.Maybe (fromJust)
 import Data.Either
+import Numeric.Natural
 import Terms
 import Data.List
 import Data.List.Split (splitOn)
@@ -19,58 +24,77 @@ data Operator = Plus
                 | Rbr
                 deriving (Eq,Show)           
 
+parse :: String -> Term
+parse = termify . initialParse 
+
 -- For testing purposes and to show general flow
 initialParse :: String -> [Either Operator Term]
-initialParse s = detectVarsAndNumbers (map tokenToOperator (tokenize s))
+initialParse = detectVarsAndNumbers . (map tokenToOperator) . tokenize 
 
 termify :: [Either Operator Term] -> Term
+-- I've reached a core term, such as a Variable or a Number (Or an already calculated Term)
 termify [Right t] = t
+-- I've got something bigger
 termify toks = 
     let 
+        -- I get the first Operator (Method below)
         fst = firstOperator toks
+        -- I split the List by the Lefthandside (LHS), Operator and Righthandside (RHS)
         (lhs,Left op,rhs) = splitByFirst toks fst
+        -- I Pattermatch only for operators, so if i get a Term here it's a justified error
     in 
+        -- I match the operators...
         case op of 
+            -- If i got an opening bracket, I first go right from the bracket and termify that
             Lbr -> termify (lhs ++ [Right (termify rhs)])
+            -- I got an closing bracket, i do everything i've got right first, and then return myself joined with rhs
+            -- This only get everything that is RIGHT from the opening bracket, so i got no problems loosing anything
+            -- After both together i have termify (lhs ++ termify (everything in Brackets) ++ rhs)
             Rbr -> termify (Right (termify lhs) : rhs)
+            -- I've got an operator i've declared unary (unaries are below)
             _ | (elem op unaries) ->
                 let 
-                    rnb = head rhs 
+                    -- Get the right Term and apply the Operator to form new Term
+                    rnb = safeRight (head rhs)  -- right neighboor 
                     rhs' = tail rhs
-                    step = termifyUnary op (fromRight' rnb)
+                    step = applyUnary op rnb
                 in 
+                    -- Recursive step further with one Operator less
                     termify (lhs ++ (Right step) : rhs') 
+            -- I've got an Operator i've declared binary (such as +)
               | (elem op binaries) -> 
                 let
-                    rnb  = fromRight' (head rhs) 
+                    -- get Both Neighboors as Terms
+                    rnb  = safeRight (head rhs) 
                     rhs' = tail rhs
-                    lnb  = fromRight' (last lhs) 
+                    lnb  = safeRight (last lhs) 
                     lhs' = init lhs
-                    step = termifyBinary lnb op rnb 
+                    -- Apply the Operator to form a new Term
+                    step = applyBinary lnb op rnb 
                 in
+                    -- Recursive Step further with one Operator less
                     termify (lhs' ++ [Right step] ++ rhs')
             otherwise       -> 
                 Var "Err" --does this ever happen? Is this Smart?
     where 
         binaries = [Plus,Minus,Star,StarStar,DivSlash] 
-        unaries  = [LnE]    
-
-termifyUnary :: Operator -> Term -> Term 
-termifyUnary op t = 
-    case op of 
-        LnE     -> Ln t 
-        -- Additional Unary Operators
-        -- TODO: Negating
-
-termifyBinary :: Term -> Operator -> Term -> Term 
-termifyBinary a op b =
-    case op of 
-        StarStar    -> Pow a b
-        Star        -> Mul a b 
-        DivSlash    -> Div a b 
-        Plus        -> Add a b
-        Minus       -> Sub a b
-        -- Additional Binary Operators 
+        unaries  = [LnE]
+        safeRight = fromRight (Var "Err") 
+        applyUnary :: Operator -> Term -> Term 
+        applyUnary op t = 
+            case op of 
+                LnE     -> Ln t 
+                -- Additional Unary Operators
+                -- TODO: Negating
+        applyBinary :: Term -> Operator -> Term -> Term 
+        applyBinary a op b =
+            case op of 
+                StarStar    -> Pow a b
+                Star        -> Mul a b 
+                DivSlash    -> Div a b 
+                Plus        -> Add a b
+                Minus       -> Sub a b
+                -- Additional Binary Operators 
 
 
 tokenize :: String -> [Token]
@@ -98,8 +122,7 @@ tokenToTerm t@(s:ss) = if (not (elem s ['a'..'z'])) --s is a number, or atleast 
 
 -- Assings the priority of each Term or Operator to the Term or operator
 -- I left some out, i case i want to add more or i forgot something
---TODO: Do this with a List as Input 
-precedence :: Either Operator Term -> (Int, Either Operator Term)
+precedence :: Either Operator Term -> (Natural, Either Operator Term)
 -- Finished Terms have the "lowest" Priority marked as 15
 precedence (Right t) = (15, Right t)
 -- Every Operator gets a priority
@@ -114,7 +137,6 @@ precedence (Left o) = (priorityOf o, Left o)
                                         LnE -> 3
                                         Lbr -> 2
                                         Rbr -> 2
-                    --TODO: Lookup Unsigned Integers
                     
 -- I Split by the Operator with the highest Priority and Return a Combination of the LefthandSide, Operator and RighthandSide
 splitByFirst :: [Either Operator Term] -> Either Operator Term -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
@@ -134,7 +156,7 @@ firstOperator os =
                             else getFirstOperator low (xs)
 
 -- Find me the lowest priority in my current Operator/Term-List
-lowestPrio :: [(Int,Either Operator Term)] -> Int
+lowestPrio :: [(Natural,Either Operator Term)] -> Natural
 lowestPrio [] = 16
 lowestPrio [(i,t)] = i
 lowestPrio ((i,t):xs) = min i (lowestPrio xs)
@@ -143,5 +165,3 @@ lowestPrio ((i,t):xs) = min i (lowestPrio xs)
 fromRight :: b -> Either a b -> b 
 fromRight def (Right b) = b 
 fromRight def (Left a) = def
-
-fromRight' = fromRight (Var "Err")
