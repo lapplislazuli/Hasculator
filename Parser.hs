@@ -19,6 +19,7 @@ data Operator = Plus
                 | Star
                 | DivSlash
                 | LnE
+                | ExpFn
                 | Minus
                 | Lbr
                 | Rbr
@@ -78,12 +79,13 @@ termify toks =
                 Var "Err" --does this ever happen? Is this Smart?
     where 
         binaries = [Plus,Minus,Star,StarStar,DivSlash] 
-        unaries  = [LnE]
+        unaries  = [LnE,ExpFn]
         safeRight = fromRight (Var "Err") 
         applyUnary :: Operator -> Term -> Term 
         applyUnary op t = 
             case op of 
-                LnE     -> Ln t 
+                LnE     -> Ln  t 
+                ExpFn   -> Exp t
                 -- Additional Unary Operators
                 -- TODO: Negating
         applyBinary :: Term -> Operator -> Term -> Term 
@@ -107,7 +109,7 @@ tokenToOperator t =
         if mop == Nothing
         then Right t 
         else Left (fromJust mop)
-    where operators = [("(",Lbr),(")",Rbr),("Ln",LnE),("**",StarStar),("*",Star),("/",DivSlash),("+",Plus),("-",Minus)]
+    where operators = [("(",Lbr),(")",Rbr),("Ln",LnE),("Exp",ExpFn),("**",StarStar),("*",Star),("/",DivSlash),("+",Plus),("-",Minus)]
 
 detectVarsAndNumbers :: [Either Operator Token] -> [Either Operator Term]
 detectVarsAndNumbers [] = []
@@ -135,6 +137,7 @@ precedence (Left o) = (priorityOf o, Left o)
                                         DivSlash -> 6
                                         StarStar -> 4
                                         LnE -> 3
+                                        ExpFn -> 3
                                         Lbr -> 2
                                         Rbr -> 2
                     

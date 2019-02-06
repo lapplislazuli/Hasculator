@@ -15,6 +15,7 @@ data Term = Add Term Term
             | Mul Term Term
             | Div Term Term
             | Ln Term
+            | Exp Term
             | Pow Term Term
             | Numb Double
             | Const String
@@ -30,6 +31,7 @@ solve t vars =
         Div a b  -> solve a vars / solve b vars
         Ln t -> log (solve t vars)
         Pow a b -> (solve a vars ** (solve b vars))
+        Exp t -> solve (Pow (Const "e") t) vars
         Numb n -> n 
         Const c -> catchEmpty (resolveConstant c)
         Var v -> catchEmpty (resolveVariable v vars)
@@ -63,6 +65,7 @@ simplify t =
             (Div a b)   -> Div (simplify a) (simplify b)
             (Pow a b)   -> Pow (simplify a) (simplify b)
             (Ln t)      -> Ln (simplify t)
+            (Exp t)     -> Exp (simplify t)
 
 extractVariables :: Term -> [String]
 extractVariables (Var c) = c:[]
@@ -74,6 +77,7 @@ extractVariables (Mul a b) = extractVariables a ++ extractVariables b
 extractVariables (Div a b) = extractVariables a ++ extractVariables b
 extractVariables (Pow a b) = extractVariables a ++ extractVariables b
 extractVariables (Ln a)  = extractVariables a
+extractVariables (Exp a) = extractVariables a
 
 hasVariables :: Term -> Bool
 hasVariables t =  length (extractVariables t) > 0

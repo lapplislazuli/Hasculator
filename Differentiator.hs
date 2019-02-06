@@ -14,8 +14,8 @@ diff t c=
             Mul a b -> Add (Mul (diff a c) b) (Mul a (diff b c) )
             Div a b -> Div (Sub (Mul (diff a c ) b) (Mul a (diff b c )) ) (Mul b b)
             Ln t -> Div (diff t c) t
-            Pow (Var a) b -> Mul b (Pow (Var a) (Sub b (Numb 1)))
-            Pow a b -> Mul (Pow (diff a c) b) (diff b c) -- TODO: This is wrong! Lookup Chainrule better Bro
+            Exp t -> Mul (Sub t (Numb 1)) (Exp t)
+            Pow a b -> diff (Exp (Mul b (Ln a))) c
             Const c -> Numb 0
             Numb n -> Numb 0
             Var v -> diffVariable v c
