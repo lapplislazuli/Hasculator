@@ -1,0 +1,17 @@
+Name:          Hasculator
+Version:        0.1.0
+
+Synopsis:       String-Parsing and various Term-utilities 
+Description:    The Hasculator parses Strings into Terms, and can solve and differentiate Terms. 
+                Later Distributions will include also search for maxima/minima aswell as finding zero-points
+Author:         Leonhard 
+Maintainer:     Not Leonhard 
+
+Cabal-Version:  >= 1.2
+
+library
+    Exposed-Modules:    Terms
+                        Parser
+                        Solver
+                        Calculator
+    Build-Depends:      base >= 2.0
