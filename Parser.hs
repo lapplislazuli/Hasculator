@@ -1,8 +1,5 @@
 -- This module parses Strings to Terms
 module Parser 
-    (
-        parse
-    ) 
 where 
 
 import Data.Maybe (fromJust)
@@ -33,69 +30,71 @@ initialParse :: String -> [Either Operator Term]
 initialParse = detectVarsAndNumbers . (map tokenToOperator) . tokenize 
 
 termify :: [Either Operator Term] -> Term
-termify [Left op] = Var "Err"
--- I've reached a core term, such as a Variable or a Number (Or an already calculated Term)
+termify [] = Var "EmptyTermErr"
+termify [Left op] = Var "LostOperatorErr"
+-- I've reached a single core term, such as a Variable or a Number (Or an already calculated Term)
 termify [Right t] = t
 -- I've got something bigger
-termify toks = 
-    let 
-        -- I get the first Operator (Method below)
-        fst = firstOperator toks
-        -- I split the List by the Lefthandside (LHS), Operator and Righthandside (RHS)
-        (lhs,Left op,rhs) = splitByFirst toks fst
-        -- I Pattermatch only for operators, so if i get a Term here it's a justified error
-    in 
-        -- I match the operators...
-        case op of 
-            -- If i got an opening bracket, I first go right from the bracket and termify that
-            Lbr -> termify (lhs ++ (applyBracket op rhs))
-            -- I got an closing bracket, i do everything i've got right first, and then return myself joined with rhs
-            -- This only get everything that is RIGHT from the opening bracket, so i got no problems loosing anything
-            -- After both together i have termify (lhs ++ termify (everything in Brackets) ++ rhs)
-            -- Rbr -> termify ((applyBracket op lhs) ++ rhs)
-            -- I've got an operator i've declared unary (unaries are below)
-            _ | (elem op unaries) ->
-                let 
-                    -- Get the right Term and apply the Operator to form new Term
-                    rnb = safeRight (head rhs)  -- right neighboor 
-                    rhs' = tail rhs
-                    step = applyUnary op rnb
-                in 
-                    -- Recursive step further with one Operator less
-                    termify (lhs ++ (Right step) : rhs') 
-            -- I've got an Operator i've declared binary (such as +)
-              | (elem op binaries) -> 
-                let
-                    -- get Both Neighboors as Terms
-                    rnb  = safeRight (head rhs) 
-                    rhs' = tail rhs
-                    lnb  = safeRight (last lhs) 
-                    lhs' = init lhs
-                    -- Apply the Operator to form a new Term
-                    step = applyBinary lnb op rnb 
-                in
-                    -- Recursive Step further with one Operator less
-                    termify (lhs' ++ [Right step] ++ rhs')
-            otherwise       -> 
-                Var "Err" --does this ever happen? Is this Smart?
+termify toks
+    | (isRight next)= Var "MissingOperatorErr" -- I've got a Term in a List of Tokens as next - this should never be possible! Happens if i put (1 + 2 2 3)
+    | (isLeft next) =
+        let 
+            op = safeLeft next 
+        in 
+            -- I match the operators...
+            case op of 
+                -- If i got an opening bracket, I first go right from the bracket and termify that
+                Lbr -> termify (lhs ++ (applyBracket op rhs))
+                -- Rbr -> termify ((applyBracket op lhs) ++ rhs) --This should not ever be the case?
+                Rbr -> Var "LostClosingBracket"
+                -- I've got an operator i've declared unary (unaries are below)
+                _ | (elem op unaries) ->
+                    let 
+                        -- Get the right Term and apply the Operator to form new Term
+                        rnb = safeRight (head rhs)  -- right neighboor 
+                        rhs' = tail rhs
+                        step = applyUnary op rnb
+                    in 
+                        -- Recursive step further with one Operator less
+                        termify (lhs ++ (Right step) : rhs') 
+                -- I've got an Operator i've declared binary (such as +)
+                _ | (elem op binaries) -> 
+                    let
+                        -- get Both Neighboors as Terms
+                        rnb  = safeRight (head rhs) 
+                        rhs' = tail rhs
+                        lnb  = safeRight (last lhs) 
+                        lhs' = init lhs
+                        -- Apply the Operator to form a new Term
+                        step = applyBinary lnb op rnb 
+                    in
+                        -- Recursive Step further with one Operator less
+                        termify (lhs' ++ [Right step] ++ rhs')
     where 
-        binaries = [Plus,Minus,Star,StarStar,DivSlash] 
-        unaries  = [LnE,ExpFn]
-        safeRight = fromRight (Var "Err")
+       binaries = [Plus,Minus,Star,StarStar,DivSlash] 
+       unaries  = [LnE,ExpFn]
+       -- I split the List by the Lefthandside (LHS), Operator and Righthandside (RHS)
+       (lhs,next,rhs) = splitByFirst toks
+       -- I Pattermatch only for operators, so if i get a Term here it's a justified error 
+
+
 
 applyBracket :: Operator -> [Either Operator Term]-> [Either Operator Term]
-applyBracket Lbr brToks  =
-    let  
-        fst = firstOperator brToks
-        (brlhs,Left brop,brrhs) = splitByFirst brToks fst
-    in 
-        brlhs ++ (applyBracket brop brrhs)
-applyBracket Rbr brToks   
-        | brlhs == []  = [Right (Var "Err")]
-        | otherwise    = [Right (termify brlhs)]++brrhs
+-- Opening Brackets
+applyBracket Lbr brToks  
+    | isLeft next   = 
+        let 
+            brop = safeLeft next
+        in
+            brlhs ++ (applyBracket brop brrhs)
+    | otherwise     = [Right (Var "Err")]
     where
-        fst = firstOperator brToks
-        (brlhs,Left brop,brrhs) = splitByFirst brToks fst
+        (brlhs,next,brrhs) = splitByFirst brToks
+-- Closing Brackets
+-- This will only get the items right from the opening brackets before
+applyBracket Rbr brToks = [Right (termify brlhs)]++brrhs
+    where
+        (brlhs,next,brrhs) = splitByFirst brToks
         
 
 applyBracket _ _ = [Right (Var "Err")]
@@ -158,12 +157,16 @@ precedence (Left o) = (priorityOf o, Left o)
                                         LnE -> 3
                                         ExpFn -> 3
                                         Rbr -> 2
-                                        Lbr -> 2
-                    
+                                        Lbr -> 1
+
+splitByFirst :: [Either Operator Term] -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
+splitByFirst toks = splitBy toks fst
+    where fst = firstOperator toks
+
 -- I Split by the Operator with the highest Priority and Return a Combination of the LefthandSide, Operator and RighthandSide
-splitByFirst :: [Either Operator Term] -> Either Operator Term -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
-splitByFirst t ops = 
-                let (p:ps) = splitOn [ops] t
+splitBy :: [Either Operator Term] -> Either Operator Term -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
+splitBy toks ops = 
+                let (p:ps) = splitOn [ops] toks
                 in (p, ops, intercalate [ops] ps)
 
 firstOperator :: [Either Operator Term] -> Either Operator Term
@@ -176,6 +179,7 @@ firstOperator os =
                         if (i == low) 
                             then t
                             else getFirstOperator low (xs)
+                    getFirstOperator _ _ = Right (Var "Err")
 
 -- Find me the lowest priority in my current Operator/Term-List
 lowestPrio :: [(Natural,Either Operator Term)] -> Natural
@@ -187,3 +191,11 @@ lowestPrio ((i,t):xs) = min i (lowestPrio xs)
 fromRight :: b -> Either a b -> b 
 fromRight def (Right b) = b 
 fromRight def (Left a) = def
+
+safeRight = fromRight (Var "Err")
+
+fromLeft :: a -> Either a b -> a 
+fromLeft def (Right b) = def
+fromLeft def (Left a) = a
+
+safeLeft = fromLeft Minus
