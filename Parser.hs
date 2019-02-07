@@ -33,6 +33,7 @@ initialParse :: String -> [Either Operator Term]
 initialParse = detectVarsAndNumbers . (map tokenToOperator) . tokenize 
 
 termify :: [Either Operator Term] -> Term
+termify [Left op] = Var "Err"
 -- I've reached a core term, such as a Variable or a Number (Or an already calculated Term)
 termify [Right t] = t
 -- I've got something bigger
@@ -47,11 +48,11 @@ termify toks =
         -- I match the operators...
         case op of 
             -- If i got an opening bracket, I first go right from the bracket and termify that
-            Lbr -> termify (lhs ++ [Right (termify rhs)])
+            Lbr -> termify (lhs ++ (applyBracket op rhs))
             -- I got an closing bracket, i do everything i've got right first, and then return myself joined with rhs
             -- This only get everything that is RIGHT from the opening bracket, so i got no problems loosing anything
             -- After both together i have termify (lhs ++ termify (everything in Brackets) ++ rhs)
-            Rbr -> termify (Right (termify lhs) : rhs)
+            -- Rbr -> termify ((applyBracket op lhs) ++ rhs)
             -- I've got an operator i've declared unary (unaries are below)
             _ | (elem op unaries) ->
                 let 
@@ -80,24 +81,42 @@ termify toks =
     where 
         binaries = [Plus,Minus,Star,StarStar,DivSlash] 
         unaries  = [LnE,ExpFn]
-        safeRight = fromRight (Var "Err") 
-        applyUnary :: Operator -> Term -> Term 
-        applyUnary op t = 
-            case op of 
-                LnE     -> Ln  t 
-                ExpFn   -> Exp t
-                -- Additional Unary Operators
-                -- TODO: Negating
-        applyBinary :: Term -> Operator -> Term -> Term 
-        applyBinary a op b =
-            case op of 
-                StarStar    -> Pow a b
-                Star        -> Mul a b 
-                DivSlash    -> Div a b 
-                Plus        -> Add a b
-                Minus       -> Sub a b
-                -- Additional Binary Operators 
+        safeRight = fromRight (Var "Err")
 
+applyBracket :: Operator -> [Either Operator Term]-> [Either Operator Term]
+applyBracket Lbr brToks  =
+    let  
+        fst = firstOperator brToks
+        (brlhs,Left brop,brrhs) = splitByFirst brToks fst
+    in 
+        brlhs ++ (applyBracket brop brrhs)
+applyBracket Rbr brToks   
+        | brlhs == []  = [Right (Var "Err")]
+        | otherwise    = [Right (termify brlhs)]++brrhs
+    where
+        fst = firstOperator brToks
+        (brlhs,Left brop,brrhs) = splitByFirst brToks fst
+        
+
+applyBracket _ _ = [Right (Var "Err")]
+
+applyUnary :: Operator -> Term -> Term 
+applyUnary op t = 
+    case op of 
+        LnE     -> Ln  t 
+        ExpFn   -> Exp t
+        -- Additional Unary Operators
+        -- TODO: Negating
+
+applyBinary :: Term -> Operator -> Term -> Term 
+applyBinary a op b =
+    case op of 
+        StarStar    -> Pow a b
+        Star        -> Mul a b 
+        DivSlash    -> Div a b 
+        Plus        -> Add a b
+        Minus       -> Sub a b
+        -- Additional Binary Operators 
 
 tokenize :: String -> [Token]
 tokenize s = words s 
@@ -138,8 +157,8 @@ precedence (Left o) = (priorityOf o, Left o)
                                         StarStar -> 4
                                         LnE -> 3
                                         ExpFn -> 3
-                                        Lbr -> 2
                                         Rbr -> 2
+                                        Lbr -> 2
                     
 -- I Split by the Operator with the highest Priority and Return a Combination of the LefthandSide, Operator and RighthandSide
 splitByFirst :: [Either Operator Term] -> Either Operator Term -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
