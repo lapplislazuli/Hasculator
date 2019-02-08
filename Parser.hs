@@ -44,7 +44,7 @@ termify toks
             -- I match the operators...
             case op of 
                 -- If i got an opening bracket, I first go right from the bracket and termify that
-                Lbr -> termify (lhs ++ (applyBracket op rhs))
+                Lbr -> termify (lhs ++ (applyBracket rhs))
                 -- Rbr -> termify ((applyBracket op lhs) ++ rhs) --This should not ever be the case?
                 Rbr -> Var "LostClosingBracketErr"
                 -- I've got an operator i've declared unary (unaries are below)
@@ -77,40 +77,18 @@ termify toks
        (lhs,next,rhs) = splitByFirst toks
        -- I Pattermatch only for operators, so if i get a Term here it's a justified error 
 
-applyBracket2 :: [Either Operator Term] -> [Either Operator Term]
-applyBracket2 toks
+applyBracket :: [Either Operator Term] -> [Either Operator Term]
+applyBracket toks
     | isLeft o =
         let 
             op = safeLeft o
         in
             case op of 
-                Lbr -> l ++ (applyBracket2 r)
+                Lbr -> l ++ (applyBracket r)
                 Rbr -> (Right (termify l)) : r      
                 otherwise -> [Right (Var "ApplyBracketErr")]  
     | isRight o = [Right (Var "ApplyBracketErr")]
     where (l,o,r) = splitByFirst toks
-
-applyBracket :: Operator -> [Either Operator Term]-> [Either Operator Term]
--- Opening Brackets
--- TODO: In LBR is a logical Flaw about which items are passed to Rbr! 
--- RBR gets the wrong items and does shit 
-applyBracket Lbr brToks  
-    | isLeft next   = 
-        let 
-            brop = safeLeft next
-        in
-            brlhs ++ (applyBracket brop brrhs)
-    | otherwise     = [Right (Var "Err")]
-    where
-        (brlhs,next,brrhs) = splitByFirst brToks
--- Closing Brackets
--- This will only get the items right from the opening brackets before
-applyBracket Rbr brToks = [Right (termify brlhs)]++brrhs
-    where
-        (brlhs,next,brrhs) = splitByFirst brToks
-        
-
-applyBracket _ _ = [Right (Var "Err")]
 
 applyUnary :: Operator -> Term -> Term 
 applyUnary op t = 
