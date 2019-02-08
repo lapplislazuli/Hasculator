@@ -155,6 +155,7 @@ splitByFirst toks = splitBy toks fst
     where fst = firstOperator toks
 
 -- I Split by the Operator with the highest Priority and Return a Combination of the LefthandSide, Operator and RighthandSide
+-- TODO: Change the Parameters other way round and reduce splitByFirst to a single sweet partial function
 splitBy :: [Either Operator Term] -> Either Operator Term -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
 splitBy toks ops = 
                 let (p:ps) = splitOn [ops] toks
