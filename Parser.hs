@@ -46,7 +46,7 @@ termify toks
                 -- If i got an opening bracket, I first go right from the bracket and termify that
                 Lbr -> termify (lhs ++ (applyBracket op rhs))
                 -- Rbr -> termify ((applyBracket op lhs) ++ rhs) --This should not ever be the case?
-                Rbr -> Var "LostClosingBracket"
+                Rbr -> Var "LostClosingBracketErr"
                 -- I've got an operator i've declared unary (unaries are below)
                 _ | (elem op unaries) ->
                     let 
@@ -77,10 +77,23 @@ termify toks
        (lhs,next,rhs) = splitByFirst toks
        -- I Pattermatch only for operators, so if i get a Term here it's a justified error 
 
-
+applyBracket2 :: [Either Operator Term] -> [Either Operator Term]
+applyBracket2 toks
+    | isLeft o =
+        let 
+            op = safeLeft o
+        in
+            case op of 
+                Lbr -> l ++ (applyBracket2 r)
+                Rbr -> (Right (termify l)) : r      
+                otherwise -> [Right (Var "ApplyBracketErr")]  
+    | isRight o = [Right (Var "ApplyBracketErr")]
+    where (l,o,r) = splitByFirst toks
 
 applyBracket :: Operator -> [Either Operator Term]-> [Either Operator Term]
 -- Opening Brackets
+-- TODO: In LBR is a logical Flaw about which items are passed to Rbr! 
+-- RBR gets the wrong items and does shit 
 applyBracket Lbr brToks  
     | isLeft next   = 
         let 
@@ -157,7 +170,7 @@ precedence (Left o) = (priorityOf o, Left o)
                                         LnE -> 3
                                         ExpFn -> 3
                                         Rbr -> 2
-                                        Lbr -> 1
+                                        Lbr -> 2
 
 splitByFirst :: [Either Operator Term] -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
 splitByFirst toks = splitBy toks fst
