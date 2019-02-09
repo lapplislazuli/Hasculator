@@ -2,7 +2,7 @@
 module Parser 
 where 
 
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust,isJust)
 import Data.Either
 import Numeric.Natural
 import Terms
@@ -23,11 +23,7 @@ data Operator = Plus
                 deriving (Eq,Show)           
 
 parse :: String -> Term
-parse = termify . initialParse 
-
--- For testing purposes and to show general flow
-initialParse :: String -> [Either Operator Term]
-initialParse = detectVarsAndNumbers . (map tokenToOperator) . tokenize 
+parse = termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize  
 
 termify :: [Either Operator Term] -> Term
 termify [] = Var "EmptyTermErr"
@@ -75,7 +71,6 @@ termify toks
        unaries  = [LnE,ExpFn]
        -- I split the List by the Lefthandside (LHS), Operator and Righthandside (RHS)
        (lhs,next,rhs) = splitByFirst toks
-       -- I Pattermatch only for operators, so if i get a Term here it's a justified error 
 
 applyBracket :: [Either Operator Term] -> [Either Operator Term]
 applyBracket toks
@@ -113,12 +108,11 @@ tokenize s = words s
 
 tokenToOperator :: Token -> Either Operator Token
 tokenToOperator t = 
-    let mop = lookup t operators
+    let mop = lookup t ( map (\(a,b,c) -> (a,b)) dictionary)
     in 
         if mop == Nothing
         then Right t 
         else Left (fromJust mop)
-    where operators = [("(",Lbr),(")",Rbr),("Ln",LnE),("Exp",ExpFn),("**",StarStar),("*",Star),("/",DivSlash),("+",Plus),("-",Minus)]
 
 detectVarsAndNumbers :: [Either Operator Token] -> [Either Operator Term]
 detectVarsAndNumbers [] = []
@@ -134,21 +128,10 @@ tokenToTerm t@(s:ss) = if (not (elem s ['a'..'z'])) --s is a number, or atleast 
 -- Assings the priority of each Term or Operator to the Term or operator
 -- I left some out, i case i want to add more or i forgot something
 precedence :: Either Operator Term -> (Natural, Either Operator Term)
--- Finished Terms have the "lowest" Priority marked as 15
-precedence (Right t) = (15, Right t)
--- Every Operator gets a priority
-precedence (Left o) = (priorityOf o, Left o)
-                        where priorityOf o =
-                                    case o of 
-                                        Plus -> 8
-                                        Minus -> 8
-                                        Star -> 6
-                                        DivSlash -> 6
-                                        StarStar -> 4
-                                        LnE -> 3
-                                        ExpFn -> 3
-                                        Rbr -> 2
-                                        Lbr -> 2
+precedence o = (priorityOf o,o)
+    where 
+        priorityOf (Right x) =  15
+        priorityOf (Left x) = fromJust (lookup x ( map (\(a,b,c) -> (b,c)) dictionary))
 
 splitByFirst :: [Either Operator Term] -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
 splitByFirst toks = splitBy toks fst
@@ -162,22 +145,18 @@ splitBy toks ops =
                 in (p, ops, intercalate [ops] ps)
 
 firstOperator :: [Either Operator Term] -> Either Operator Term
-firstOperator os =
-                let l = map precedence os
-                    lowest = lowestPrio l
-                in  getFirstOperator lowest l
-                where 
-                    getFirstOperator low ((i,t):xs) =
-                        if (i == low) 
-                            then t
-                            else getFirstOperator low (xs)
-                    getFirstOperator _ _ = Right (Var "Err")
+firstOperator os = snd (foldl step (17,Right (Var "PriorityErr")) (map precedence os))
+                        where 
+                            step old@(a,b) new@(c,d) 
+                                | a > c= new
+                                | otherwise = old 
 
 -- Find me the lowest priority in my current Operator/Term-List
 lowestPrio :: [(Natural,Either Operator Term)] -> Natural
-lowestPrio [] = 16
-lowestPrio [(i,t)] = i
-lowestPrio ((i,t):xs) = min i (lowestPrio xs)
+lowestPrio ops = foldl (min) 16 (map (\(a,b)->a) ops)
+
+dictionary :: [(Token,Operator,Natural)]
+dictionary = [("(",Lbr,2),(")",Rbr,2),("Ln",LnE,3),("Exp",ExpFn,3),("**",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
 
 --TODO: Why can't i load this from normal Data.Either Package?
 fromRight :: b -> Either a b -> b 
