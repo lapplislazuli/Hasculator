@@ -1,6 +1,9 @@
 import Test.HUnit
 import Terms 
 import Parser
+import Solver
+
+import Control.Exception
 
 allTests = TestList [
      TestLabel "ParserTests" coreParserTests
@@ -101,6 +104,20 @@ testOneMissing = 2 ~=? (parSolv "x + y" [("x",2)])
 testOneTooMuch = 3 ~=? (parSolv "x + y" [("x",2),("y",1),("z",2)])
 testTooMuch = 5 ~=? (parSolv "5" [("x",2),("y",1),("z",2)])
 
+solverTests = TestList[
+    TestLabel "Regula Falsi I " testRegula1
+    ,TestLabel "Regula Falsi II " testRegula2
+--    ,TestLabel "Regula Falsi Square" testRegulaSqr
+--    ,TestLabel "Regula Wrong input" testRegulaWIP
+    ,TestLabel "Regula Falsi x^3" testRegulaPol
+    ]
+
+testRegula1 =  (-2) ~=? round (regulaFalsi (parse "x + 2") 100 (-4) 4 )
+testRegula2 =  (2) ~=? round (regulaFalsi (parse "x - 2") 100 (-4) 4 )
+testRegulaPol =  (1) ~=? round (regulaFalsi (parse "x**3 -1") 100 (-3) 5 )
+--TODO: How do i check for error messages?
+--testRegulaSqr =  assertFailure "InvalidInput - a < b required"  (round (regulaFalsi (parse "x**2 + 2") 100 (-10) 10 ))
+--testRegulaWIP =  FAILURE ~=? round (regulaFalsi (parse "x**2 + 2") 100 10 (-10) )
 
 -- These Special Testcases originate from special bugs i've encountered and worked through,
 -- They should be therefore checked forever after so i will hopefully never see them again
