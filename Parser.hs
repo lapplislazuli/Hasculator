@@ -11,7 +11,7 @@ import Data.List.Split (splitOn)
 
 
 parse :: String -> Term
-parse = termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize  
+parse = termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize'  
 
 type Token = String 
 
@@ -27,7 +27,7 @@ data Operator = Plus
                 deriving (Eq,Show)           
 
 dictionary :: [(Token,Operator,Natural)]
-dictionary = [("(",Lbr,2),(")",Rbr,2),("Ln",LnE,3),("Exp",ExpFn,3),("**",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
+dictionary = [("(",Lbr,2),(")",Rbr,2),("Ln",LnE,3),("Exp",ExpFn,3),("^",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
 
 termify :: [Either Operator Term] -> Term
 termify [] = Var "EmptyTermErr"
@@ -107,9 +107,6 @@ applyBinary a op b =
         Minus       -> Sub a b
         -- Additional Binary Operators 
 
-tokenize :: String -> [Token]
-tokenize s = words s 
-
 tokenToOperator :: Token -> Either Operator Token
 tokenToOperator t = 
     let mop = lookup t ( map (\(a,b,c) -> (a,b)) dictionary)
@@ -150,6 +147,26 @@ firstOperator os = snd (foldl step (17,Right (Var "PriorityErr")) (map precedenc
                             step old@(a,b) new@(c,d) 
                                 | a > c= new
                                 | otherwise = old
+
+tokenize' :: String -> [String]
+tokenize' s = filter (\n -> not (n==[])) (applySeps seps (words s))
+    where 
+        seps = (map (\(a,b,c) -> a :: String ) dictionary)
+        applySep sep s' = flat' (map (split' sep) s')
+        applySeps [] s' = s'
+        applySeps (x:xs) s' = applySeps xs (applySep x s')
+
+flat' :: [[String]] -> [String]
+flat' [] = []
+flat' [x] = x
+flat' (x:xs) = x ++ (flat' xs)
+
+split' :: String -> String -> [String]
+split' sep str = conc' sep (splitOn sep str) 
+
+conc' :: String -> [String] -> [String]
+conc' _ [s] = [s]
+conc' sep (s:ss) = s:sep:(conc' sep ss)
 
 --TODO: Why can't i load this from normal Data.Either Package?
 fromRight :: b -> Either a b -> b 

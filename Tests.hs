@@ -8,6 +8,7 @@ import Control.Exception
 allTests = TestList [
      TestLabel "ParserTests" coreParserTests
     ,TestLabel "OperatorTests" operatorTests
+    ,TestLabel "TokenizerTests" tokenizerTests
     ,TestLabel "PrecedenceTests" precedenceTests
     ,TestLabel "VariableTests" variableTests
 --    ,TestLabel "SolverTests" solverTests --TODO: These sometimes do not stop?
@@ -21,6 +22,8 @@ coreParserTests = TestList [
     ,TestLabel "Longer Variable Parsing" parLongerVar
     ,TestLabel "SingleBrackets" parBracketedNumb
     ,TestLabel "DoubleBrackets" parDoubleBracketedNumb
+    ,TestLabel "Constant" parConst
+    ,TestLabel "NoConst" parConstExtra
 
     ,TestLabel "Lost Bracket" lostBracket
     ,TestLabel "Missing Operator" tooManyTerms
@@ -34,7 +37,8 @@ parSingleNumb = 1 ~=? (simParSolv "1")
 parSingleNumb2 =  (simParSolv "1") ~=? 1 
 parSingleVar  = 0 ~=? (simParSolv "a")
 parLongerVar  = 0 ~=? (simParSolv "long")
---TODO: Constants!
+parConst      = exp(1) ~=? (simParSolv "e")
+parConstExtra = 0 ~=? (simParSolv "ee")
 
 parBracketedNumb = 1 ~=? (simParSolv "( 1 )")
 parDoubleBracketedNumb = 1 ~=? (simParSolv "( ( 1 ) )")
@@ -46,6 +50,25 @@ missingArgs = 1 ~=? (parSolv "+" [("LostOperatorErr",1)])
 emptyTerm = 1 ~=? (parSolv " " [("EmptyTermErr",1)])
 emptyBrackets = 1 ~=? (parSolv "( )" [("EmptyTermErr",1)])
 
+tokenizerTests = TestList [
+    TestLabel "NoSpaces I" testNsp1
+    ,TestLabel "NoSpaces II" testNsp2
+    ,TestLabel "NoSpaces III" testNsp3
+    ,TestLabel "MixedSpaces I" testMsp1
+    ,TestLabel "MixedSpaces II" testMsp2
+    ,TestLabel "FullSpaces I" testFsp1
+    ,TestLabel "Overfull Spaces I" testOfsp1
+    ,TestLabel "Overfull Spaces II" testOfsp2
+    ]
+
+testNsp1 = 3 ~=? (simParSolv "1+2")
+testNsp2 = 10 ~=? (simParSolv "(1+2*4)+1")
+testNsp3 = 16 ~=? (simParSolv "3*2+2*5")
+testMsp1 = 3 ~=? (simParSolv "1 +2")
+testMsp2 = 10 ~=? (simParSolv "(1+ 2* 4)+1 ")
+testFsp1 = 6 ~=? (simParSolv " 3 * 2 ")
+testOfsp1 = 10 ~=? (simParSolv "(1  + 2*  4) +1   ")
+testOfsp2 = 10 ~=? (simParSolv "   (    1+    2* 4   )    +1 ")
 
 operatorTests = TestList [
     TestLabel "Addition" testAdd 
@@ -63,9 +86,9 @@ testAdd = 3 ~=? (simParSolv "1 + 2")
 testSub = 1 ~=? (simParSolv "2 - 1")
 testMul = 6 ~=? (simParSolv "3 * 2")
 testDiv = 5 ~=? (simParSolv "10 / 2")
-testPow = 4 ~=? (simParSolv "2 ** 2")
-testPowLow = 2 ~=? (simParSolv "4 ** ( 1 / 2 )")
-testNegPow = 0.5 ~=? (simParSolv "2 ** ( 0 - 1 ) ")
+testPow = 4 ~=? (simParSolv "2 ^ 2")
+testPowLow = 2 ~=? (simParSolv "4 ^ ( 1 / 2 )")
+testNegPow = 0.5 ~=? (simParSolv "2 ^ ( 0 - 1 ) ")
 --Exp was a little Bitchy, so i rounded it to 8 digits after
 testExp = truncate' (exp 3) 8 ~=? truncate' (simParSolv "Exp 3") 8
 testLn = log 10 ~=? (simParSolv "Ln 10")
@@ -83,9 +106,9 @@ precedenceTests = TestList [
     ]
 
 testPS = 5 ~=? (simParSolv "1 + 2 * 2")
-testPP = 12 ~=? (simParSolv "3 * 2 ** 2 ")
+testPP = 12 ~=? (simParSolv "3 * 2 ^ 2 ")
 testFPoi = (truncate' ((exp 3) * 3) 8) ~=? truncate' (simParSolv "Exp 3 * 3") 8
-testFPow = (truncate' ((exp 3) ** 2) 8) ~=? truncate' (simParSolv "Exp 3 ** 2 ") 8
+testFPow = (truncate' ((exp 3) ** 2) 8) ~=? truncate' (simParSolv "Exp 3 ^ 2 ") 8
 testBU = truncate' (exp 3) 8 ~=? truncate' (simParSolv "Exp ( 1 + 2 )") 8
 testBB = 6 ~=? (simParSolv "( 1 + 1 ) * 3")
 testSES = 3 ~=? (simParSolv "2 + 2 - 1")
@@ -115,7 +138,7 @@ solverTests = TestList[
 
 testRegula1 =  (-2) ~=? round (regulaFalsi (parse "x + 2") 100 (-4) 4 )
 testRegula2 =  (2) ~=? round (regulaFalsi (parse "x - 2") 100 (-5) 5 ) --TODO: Something is Wrong here!
-testRegulaPol =  (1) ~=? round (regulaFalsi (parse "x**3 -1") 100 (-2) 2 )
+testRegulaPol =  (1) ~=? round (regulaFalsi (parse "x^3 -1") 100 (-2) 2 )
 --TODO: How do i check for error messages?
 --testRegulaSqr =  assertFailure "InvalidInput - a < b required"  (round (regulaFalsi (parse "x**2 + 2") 100 (-10) 10 ))
 --testRegulaWIP =  FAILURE ~=? round (regulaFalsi (parse "x**2 + 2") 100 10 (-10) )
