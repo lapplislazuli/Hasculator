@@ -6,7 +6,8 @@ module Terms
         solve,
         simplify, 
         extractVariables,
-        hasVariables
+        hasVariables,
+        constants
     )
 where
 
@@ -84,7 +85,9 @@ hasVariables t =  length (extractVariables t) > 0
             
 resolveConstant :: String -> Maybe Double
 resolveConstant c = resolveVariable c constants
-    where constants = (['e'], (exp 1)):[]
+
+constants :: [(String,Double)]
+constants = (['e'], (exp 1)):[]
 
 resolveVariable :: String -> [(String,Double)] -> Maybe Double
 resolveVariable _ [] = Nothing

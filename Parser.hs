@@ -9,6 +9,10 @@ import Terms
 import Data.List
 import Data.List.Split (splitOn)
 
+
+parse :: String -> Term
+parse = termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize  
+
 type Token = String 
 
 data Operator = Plus
@@ -22,8 +26,8 @@ data Operator = Plus
                 | Rbr
                 deriving (Eq,Show)           
 
-parse :: String -> Term
-parse = termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize  
+dictionary :: [(Token,Operator,Natural)]
+dictionary = [("(",Lbr,2),(")",Rbr,2),("Ln",LnE,3),("Exp",ExpFn,3),("**",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
 
 termify :: [Either Operator Term] -> Term
 termify [] = Var "EmptyTermErr"
@@ -115,18 +119,17 @@ tokenToOperator t =
         else Left (fromJust mop)
 
 detectVarsAndNumbers :: [Either Operator Token] -> [Either Operator Term]
-detectVarsAndNumbers [] = []
-detectVarsAndNumbers ((Left e):es) = (Left e) : detectVarsAndNumbers es 
-detectVarsAndNumbers ((Right e):es) = (Right (tokenToTerm e)) : (detectVarsAndNumbers es)
+detectVarsAndNumbers lst = map f lst 
+            where f (Right e) = Right (tokenToTerm e )
+                  f (Left e) = Left e   
 
-tokenToTerm :: Token -> Term
-tokenToTerm [] = Numb 0
-tokenToTerm t@(s:ss) = if (not (elem s ['a'..'z'])) --s is a number, or atleast not a char
-                        then Numb (read t)
-                        else Var t --TODO: Catch Constants here
+tokenToTerm :: Token -> Term 
+tokenToTerm tok@(s:ss) 
+            | not (elem s ['a'..'z'])       = Numb (read tok :: Double)
+            | elem tok (map fst constants)  = Const tok
+            | otherwise                     = Var tok
 
--- Assings the priority of each Term or Operator to the Term or operator
--- I left some out, i case i want to add more or i forgot something
+-- Assings the priority of each Term or Operator to it
 precedence :: Either Operator Term -> (Natural, Either Operator Term)
 precedence o = (priorityOf o,o)
     where 
@@ -134,13 +137,10 @@ precedence o = (priorityOf o,o)
         priorityOf (Left x) = fromJust (lookup x ( map (\(a,b,c) -> (b,c)) dictionary))
 
 splitByFirst :: [Either Operator Term] -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
-splitByFirst toks = splitBy toks fst
-    where fst = firstOperator toks
+splitByFirst toks = splitBy (firstOperator toks) toks
 
--- I Split by the Operator with the highest Priority and Return a Combination of the LefthandSide, Operator and RighthandSide
--- TODO: Change the Parameters other way round and reduce splitByFirst to a single sweet partial function
-splitBy :: [Either Operator Term] -> Either Operator Term -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
-splitBy toks ops = 
+splitBy :: Either Operator Term -> [Either Operator Term] -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
+splitBy ops toks= 
                 let (p:ps) = splitOn [ops] toks
                 in (p, ops, intercalate [ops] ps)
 
@@ -149,14 +149,7 @@ firstOperator os = snd (foldl step (17,Right (Var "PriorityErr")) (map precedenc
                         where 
                             step old@(a,b) new@(c,d) 
                                 | a > c= new
-                                | otherwise = old 
-
--- Find me the lowest priority in my current Operator/Term-List
-lowestPrio :: [(Natural,Either Operator Term)] -> Natural
-lowestPrio ops = foldl (min) 16 (map (\(a,b)->a) ops)
-
-dictionary :: [(Token,Operator,Natural)]
-dictionary = [("(",Lbr,2),(")",Rbr,2),("Ln",LnE,3),("Exp",ExpFn,3),("**",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
+                                | otherwise = old
 
 --TODO: Why can't i load this from normal Data.Either Package?
 fromRight :: b -> Either a b -> b 
