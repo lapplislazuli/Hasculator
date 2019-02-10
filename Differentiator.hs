@@ -28,4 +28,4 @@ diffVariable v c =
 
 --Shortcut for diffing x
 dx :: Term -> Term
-dx t = simpDiff t ['x']
+dx t = simpDiff t "x"

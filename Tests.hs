@@ -2,6 +2,7 @@ import Test.HUnit
 import Terms 
 import Parser
 import Solver
+import Differentiator 
 
 import Control.Exception
 
@@ -11,6 +12,7 @@ allTests = TestList [
     ,TestLabel "TokenizerTests" tokenizerTests
     ,TestLabel "PrecedenceTests" precedenceTests
     ,TestLabel "VariableTests" variableTests
+    ,TestLabel "Basic DifferentiatorTests" coreDifferTests
 --    ,TestLabel "SolverTests" solverTests --TODO: These sometimes do not stop?
     ,TestLabel "SpecialTests" specialTests
     ]
@@ -143,6 +145,34 @@ testRegulaPol =  (1) ~=? round (regulaFalsi (parse "x^3 -1") 100 (-2) 2 )
 --testRegulaSqr =  assertFailure "InvalidInput - a < b required"  (round (regulaFalsi (parse "x**2 + 2") 100 (-10) 10 ))
 --testRegulaWIP =  FAILURE ~=? round (regulaFalsi (parse "x**2 + 2") 100 10 (-10) )
 
+coreDifferTests = TestList [
+    TestLabel "No Vars I " testDFVar1
+    ,TestLabel "No Vars II" testDFVar2
+    ,TestLabel "Linear I" testDfLin1
+    ,TestLabel "Linear II" testDfLin2
+    ,TestLabel "Linear III" testDfLin3
+    ,TestLabel "Linear Wrong Var" testLinWV
+    
+    ,TestLabel "Simple Exp I" testDfExp1
+    ,TestLabel "Simple Exp II" testDfExp2
+    ,TestLabel "Simple Ln I" testDfLn1
+    ,TestLabel "Simple Ln II" testDfLn2 
+    ,TestLabel "Simple Ln III" testDfLn3 
+    ]
+
+testDFVar1 = 0 ~=? simpSolDifPar "2"
+testDFVar2 = 0 ~=? simpSolDifPar "2*4 + 2 + 4*2"
+testDfLin1 = 1 ~=? simpSolDifPar "x"
+testDfLin2 = 1 ~=? simpSolDifPar "x+2"
+testDfLin3 = (-1) ~=? simpSolDifPar "2-x"
+testLinWV = 0 ~=? simpSolDifPar "y"
+
+testDfExp1 = 0 ~=? truncate' (simpSolDifPar "Exp 1") 8
+testDfExp2 = truncate' ((exp 2)) 8 ~=? truncate' (solDifPar "Exp x" [("x",2.0)]) 8
+testDfLn1 = 0 ~=? simpSolDifPar "Ln 3"
+testDfLn2 = 1 ~=? solDifPar "Ln x" [("x",1.0)]
+testDfLn3 = 0.5 ~=? solDifPar "Ln x" [("x",2.0)]
+
 -- These Special Testcases originate from special bugs i've encountered and worked through,
 -- They should be therefore checked forever after so i will hopefully never see them again
 specialTests = TestList [
@@ -162,6 +192,9 @@ testLongLostBR = 1 ~=? (parSolv "( ( ( 1 + ( 1 + 0 ) ) ) + ( 2 ) ) )" [("LostClo
 ------------------------------------
 -- Helpers
 ------------------------------------ 
+
+simpSolDifPar s = solDifPar s []
+solDifPar s vars = solve ((dx . parse) s) vars 
 
 --These methods shorthand some tests
 parSolv :: String -> [(String, Double)] -> Double
