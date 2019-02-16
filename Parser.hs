@@ -166,11 +166,7 @@ flat' [x] = x
 flat' (x:xs) = x ++ (flat' xs)
 
 split' :: String -> String -> [String]
-split' sep str = conc' sep (splitOn sep str) 
-
-conc' :: String -> [String] -> [String]
-conc' _ [s] = [s]
-conc' sep (s:ss) = s:sep:(conc' sep ss)
+split' sep str = intersperse sep (splitOn sep str) 
 
 safeRight = fromRight (ErrorTerm "SafeRightErr")
 safeLeft = fromLeft Minus
