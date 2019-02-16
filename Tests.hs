@@ -11,6 +11,7 @@ allTests = TestList [
     ,TestLabel "OperatorTests" operatorTests
     ,TestLabel "TokenizerTests" tokenizerTests
     ,TestLabel "PrecedenceTests" precedenceTests
+    ,TestLabel "NegationTests" negaterTests
     ,TestLabel "VariableTests" variableTests
     ,TestLabel "Basic DifferentiatorTests" coreDifferTests
 --    ,TestLabel "SolverTests" solverTests --TODO: These sometimes do not stop?
@@ -105,6 +106,12 @@ precedenceTests = TestList [
     ,TestLabel "Brackets Binary"    testBB
     ,TestLabel "Stick = Stick"      testSES
     ,TestLabel "Power = Power"      testPEP
+    
+    ,TestLabel "Negate > Stick"      testNegSt
+    ,TestLabel "Negate > Point"      testNegPt
+    ,TestLabel "Negate = Fns I "      testNegFn1
+    ,TestLabel "Negate = Fns II"      testNegFn2
+    
     ]
 
 testPS = 5 ~=? (simParSolv "1 + 2 * 2")
@@ -115,6 +122,11 @@ testBU = truncate' (exp 3) 8 ~=? truncate' (simParSolv "Exp ( 1 + 2 )") 8
 testBB = 6 ~=? (simParSolv "( 1 + 1 ) * 3")
 testSES = 3 ~=? (simParSolv "2 + 2 - 1")
 testPEP = 8 ~=? (simParSolv "( 1 * 2 ) + ( 2 * 3 )")
+
+testNegSt = 1 ~=? simParSolv "!1+2"
+testNegPt = (-6) ~=? simParSolv "!2*3"
+testNegFn1 = -1 ~=? simParSolv "! Exp 0"
+testNegFn2 = 0.6 ~=? truncate' (simParSolv "Exp ! 0.5") 1 
 
 variableTests = TestList [
     TestLabel "Insert One Variable " testVar1
@@ -129,6 +141,36 @@ testVar2 = 6 ~=? (parSolv "x * y" [("x",2),("y",3)])
 testOneMissing = 2 ~=? (parSolv "x + y" [("x",2)])
 testOneTooMuch = 3 ~=? (parSolv "x + y" [("x",2),("y",1),("z",2)])
 testTooMuch = 5 ~=? (parSolv "5" [("x",2),("y",1),("z",2)])
+
+negaterTests = TestList [
+    TestLabel "Negate Positive Number" negPosNum
+    ,TestLabel "Negate Negative Number" negNegNum
+    ,TestLabel "Double Negate Number"negnegNum
+    ,TestLabel "Negate Var" negVar 
+    ,TestLabel "DoubleNegate Var" negnegVar
+    ,TestLabel "NegateBrackets" negBrackets
+    ,TestLabel "Negate Zero" negZero
+
+    ,TestLabel "Negate Addition I" negAdd
+    ,TestLabel "Negate Addition II" negSub
+    ,TestLabel "Negate Mult" negMul 
+    ,TestLabel "Negate Fn I" negFn1
+    ,TestLabel "Negate Fn II" negFn2
+    ]
+
+negPosNum = (-5) ~=? simParSolv "!5"
+negNegNum = 5   ~=? simParSolv "!(0-5)"
+negnegNum = 5   ~=? simParSolv "!(!5)"
+negVar    = (-3)   ~=? parSolv "!a" [("a",3)]
+negnegVar    = 3   ~=? parSolv "!(!a)" [("a",3)]
+negBrackets = (-4) ~=? simParSolv "!(4)"
+negZero = 0 ~=? simParSolv "!0"
+
+negAdd = (-3) ~=? simParSolv "!(1+2)"
+negSub = 3 ~=? simParSolv "!(1-4)"
+negMul = (-6) ~=? simParSolv "!(2*3)"
+negFn1 = (-1) ~=? simParSolv "!(Exp 1)" 
+negFn2 = (-1) ~=? simParSolv "!(Ln 0)"
 
 solverTests = TestList[
     TestLabel "Regula Falsi I " testRegula1

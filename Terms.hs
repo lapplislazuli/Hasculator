@@ -4,6 +4,7 @@ module Terms
     (
         Term(..),
         solve,
+        negateTerm,
         simplify, 
         extractVariables,
         hasVariables,
@@ -101,3 +102,6 @@ resolveVariable i ((c,v):vs) =
 catchEmpty :: Maybe Double -> Double
 catchEmpty Nothing = 0
 catchEmpty (Just a) = a
+
+negateTerm :: Term -> Term 
+negateTerm t = Mul (Numb (-1)) t
