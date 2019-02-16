@@ -125,8 +125,8 @@ testPEP = 8 ~=? (simParSolv "( 1 * 2 ) + ( 2 * 3 )")
 
 testNegSt = 1 ~=? simParSolv "!1+2"
 testNegPt = (-6) ~=? simParSolv "!2*3"
-testNegFn1 = -1 ~=? simParSolv "! Exp 0"
-testNegFn2 = 0.6 ~=? truncate' (simParSolv "Exp ! 0.5") 1 
+testNegFn1 = ErrorTerm "MissingOperatorErr" ~=? parse "! Exp 0"
+testNegFn2 = ErrorTerm "MissingOperatorErr" ~=? parse "Exp ! 0.5" 
 
 variableTests = TestList [
     TestLabel "Insert One Variable " testVar1
@@ -169,8 +169,8 @@ negZero = 0 ~=? simParSolv "!0"
 negAdd = (-3) ~=? simParSolv "!(1+2)"
 negSub = 3 ~=? simParSolv "!(1-4)"
 negMul = (-6) ~=? simParSolv "!(2*3)"
-negFn1 = (-1) ~=? simParSolv "!(Exp 1)" 
-negFn2 = (-1) ~=? simParSolv "!(Ln 0)"
+negFn1 = (-1) ~=? simParSolv "!(Exp 0)" 
+negFn2 = (-1) ~=? simParSolv "!(Ln e)"
 
 solverTests = TestList[
     TestLabel "Regula Falsi I " testRegula1

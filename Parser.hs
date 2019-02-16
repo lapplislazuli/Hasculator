@@ -22,12 +22,13 @@ data Operator = Plus
                 | LnE
                 | ExpFn
                 | Minus
+                | Neg
                 | Lbr
                 | Rbr
                 deriving (Eq,Show)           
 
 dictionary :: [(Token,Operator,Natural)]
-dictionary = [("(",Lbr,2),(")",Rbr,2),("Ln",LnE,3),("Exp",ExpFn,3),("^",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
+dictionary = [("(",Lbr,2),(")",Rbr,2),("!",Neg,3),("Ln",LnE,3),("Exp",ExpFn,3),("^",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
 
 cleanTermify :: Either String Term -> Term
 cleanTermify (Left err) = ErrorTerm err 
@@ -76,7 +77,7 @@ termify toks
                         termify (lhs' ++ [Right step] ++ rhs')
     where 
        binaries = [Plus,Minus,Star,StarStar,DivSlash] 
-       unaries  = [LnE,ExpFn]
+       unaries  = [Neg,LnE,ExpFn]
        -- I split the List by the Lefthandside (LHS), Operator and Righthandside (RHS)
        (lhs,next,rhs) = splitByFirst toks
 
@@ -96,10 +97,10 @@ applyBracket toks
 applyUnary :: Operator -> Term -> Term 
 applyUnary op t = 
     case op of 
+        Neg     -> (negateTerm t) 
         LnE     -> Ln  t 
         ExpFn   -> Exp t
         -- Additional Unary Operators
-        -- TODO: Negating
 
 applyBinary :: Term -> Operator -> Term -> Term 
 applyBinary a op b =
