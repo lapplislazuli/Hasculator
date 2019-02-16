@@ -23,7 +23,7 @@ data Term = Add Term Term
             | Const String
             | Var String
             | ErrorTerm String
-            deriving (Eq,Show)
+            deriving (Eq)
 
 solve :: Term -> [(String,Double)]-> Double
 solve t vars = 
@@ -105,3 +105,23 @@ catchEmpty (Just a) = a
 
 negateTerm :: Term -> Term 
 negateTerm t = Mul (Numb (-1)) t
+
+instance Show Term where 
+    show t = 
+        case t of 
+             Numb a     ->  show a 
+             Var a      -> show a 
+             ErrorTerm err -> show err
+             Const a -> show a 
+             Add a b -> binaryShowHelper "+" a b 
+             Sub a b -> binaryShowHelper "-" a b 
+             Mul a b -> binaryShowHelper "*" a b 
+             Div a b -> binaryShowHelper "/" a b 
+             Pow a b -> binaryShowHelper "^" a b 
+             Ln t -> unaryShowHelper "Ln" t 
+             Exp t -> unaryShowHelper "Exp" t
+        where 
+            binaryShowHelper :: String -> Term -> Term -> String 
+            binaryShowHelper op a b = "("++ show a ++ op ++ show b ++ ")"
+            unaryShowHelper :: String -> Term -> String 
+            unaryShowHelper op t = op ++ "(" ++ show t ++ ")"
