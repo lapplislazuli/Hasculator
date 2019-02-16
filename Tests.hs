@@ -46,11 +46,11 @@ parBracketedNumb = 1 ~=? (simParSolv "( 1 )")
 parDoubleBracketedNumb = 1 ~=? (simParSolv "( ( 1 ) )")
 
 -- ErrorHandling
-lostBracket = 1 ~=? (parSolv "1 )" [("LostClosingBracketErr",1)])
-tooManyTerms = 1 ~=? (parSolv "1 a" [("MissingOperatorErr",1)]) 
-missingArgs = 1 ~=? (parSolv "+" [("LostOperatorErr",1)])
-emptyTerm = 1 ~=? (parSolv " " [("EmptyTermErr",1)])
-emptyBrackets = 1 ~=? (parSolv "( )" [("EmptyTermErr",1)])
+lostBracket = ErrorTerm "LostClosingBracketErr" ~=? parse "1 )"
+tooManyTerms = ErrorTerm "MissingOperatorErr" ~=? parse "1 a" 
+missingArgs = ErrorTerm "LostOperatorErr" ~=? parse "+"
+emptyTerm = ErrorTerm "EmptyTermErr" ~=? parse " "
+emptyBrackets = ErrorTerm "SafeRightErr" ~=? parse "( )"
 
 tokenizerTests = TestList [
     TestLabel "NoSpaces I" testNsp1
@@ -229,18 +229,18 @@ specialTests = TestList [
 testGF1 = (truncate' ((exp 3) + 3) 8) ~=? truncate' (simParSolv "( Exp ( 1 + 2 ) + 3 )") 8
 testGF2 = (truncate' ((log 3) * 3) 8) ~=? truncate' (simParSolv "( ( Ln ( 1 + 2 ) ) * 3 ) ") 8
 testUnBr = 5 ~=? simParSolv "( ( 1 + ( 2 ) ) ) + ( 1 + ( ( 1 ) + ( 0 ) ) )"
-testLongLostBR = 1 ~=? (parSolv "( ( ( 1 + ( 1 + 0 ) ) ) + ( 2 ) ) )" [("LostClosingBracketErr",1)])
+testLongLostBR = ErrorTerm "LostClosingBracketErr" ~=? parse "( ( ( 1 + ( 1 + 0 ) ) ) + ( 2 ) ) )"
 
 ------------------------------------
 -- Helpers
 ------------------------------------ 
 
 simpSolDifPar s = solDifPar s []
-solDifPar s vars = safeSolve ((dx . parse) s) vars 
+solDifPar s vars = solve ((dx . parse) s) vars 
 
 --These methods shorthand some tests
 parSolv :: String -> [(String, Double)] -> Double
-parSolv str vars = safeSolve (parse str) vars
+parSolv str vars = solve (parse str) vars
 --Solves the Term for no-Variables (or every Variable 0)
 simParSolv :: String -> Double 
 simParSolv str = (parSolv str []) 

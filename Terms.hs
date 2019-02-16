@@ -21,11 +21,8 @@ data Term = Add Term Term
             | Numb Double
             | Const String
             | Var String
+            | ErrorTerm String
             deriving (Eq,Show)
-
-safeSolve :: Either String Term -> [(String,Double)] -> Double 
-safeSolve (Right t) vars= solve t vars 
-safeSolve (Left t) _ = error  
 
 solve :: Term -> [(String,Double)]-> Double
 solve t vars = 
@@ -40,6 +37,7 @@ solve t vars =
         Numb n -> n 
         Const c -> catchEmpty (resolveConstant c)
         Var v -> catchEmpty (resolveVariable v vars)
+        ErrorTerm _ -> 0
 
 simplify :: Term -> Term
 simplify t = 

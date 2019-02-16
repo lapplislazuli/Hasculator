@@ -10,8 +10,8 @@ import Data.List
 import Data.List.Split (splitOn)
 
 
-parse :: String -> Either String Term
-parse = termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize'  
+parse :: String -> Term
+parse = cleanTermify . termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize'  
 
 type Token = String 
 
@@ -28,6 +28,10 @@ data Operator = Plus
 
 dictionary :: [(Token,Operator,Natural)]
 dictionary = [("(",Lbr,2),(")",Rbr,2),("Ln",LnE,3),("Exp",ExpFn,3),("^",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
+
+cleanTermify :: Either String Term -> Term
+cleanTermify (Left err) = ErrorTerm err 
+cleanTermify (Right t)  = t 
 
 termify :: [Either Operator Term] -> Either String Term
 termify [] = Left "EmptyTermErr"
@@ -142,7 +146,7 @@ splitBy ops toks=
                 in (p, ops, intercalate [ops] ps)
 
 firstOperator :: [Either Operator Term] -> Either Operator Term
-firstOperator os = snd (foldl step (17,Right (Var "PriorityErr")) (map precedence os))
+firstOperator os = snd (foldl step (17,Right (ErrorTerm "PriorityErr")) (map precedence os))
                         where 
                             step old@(a,b) new@(c,d) 
                                 | a > c= new
@@ -168,5 +172,5 @@ conc' :: String -> [String] -> [String]
 conc' _ [s] = [s]
 conc' sep (s:ss) = s:sep:(conc' sep ss)
 
-safeRight = fromRight (Var "SafeRightErr")
+safeRight = fromRight (ErrorTerm "SafeRightErr")
 safeLeft = fromLeft Minus
