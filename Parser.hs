@@ -168,15 +168,5 @@ conc' :: String -> [String] -> [String]
 conc' _ [s] = [s]
 conc' sep (s:ss) = s:sep:(conc' sep ss)
 
---TODO: Why can't i load this from normal Data.Either Package?
-fromRight :: b -> Either a b -> b 
-fromRight def (Right b) = b 
-fromRight def (Left a) = def
-
 safeRight = fromRight (Var "Err")
-
-fromLeft :: a -> Either a b -> a 
-fromLeft def (Right b) = def
-fromLeft def (Left a) = a
-
 safeLeft = fromLeft Minus
