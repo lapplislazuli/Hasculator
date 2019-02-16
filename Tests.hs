@@ -10,6 +10,7 @@ allTests = TestList [
      TestLabel "ParserTests" coreParserTests
     ,TestLabel "OperatorTests" operatorTests
     ,TestLabel "TokenizerTests" tokenizerTests
+    ,TestLabel "Basic Show-Tests" termShowTests
     ,TestLabel "PrecedenceTests" precedenceTests
     ,TestLabel "NegationTests" negaterTests
     ,TestLabel "VariableTests" variableTests
@@ -172,7 +173,29 @@ negMul = (-6) ~=? simParSolv "!(2*3)"
 negFn1 = (-1) ~=? simParSolv "!(Exp 0)" 
 negFn2 = (-1) ~=? simParSolv "!(Ln e)"
 
-solverTests = TestList[
+termShowTests = TestList [
+        TestLabel "Show Number" showNb
+        ,TestLabel "Show Var" showVar
+        ,TestLabel "Show longerVar" showLongVar
+        ,TestLabel "Show NumberVar" showNumVar
+        ,TestLabel "Show Err" showErr 
+        ,TestLabel "Show Const" showConst
+
+        ,TestLabel "Show Binary" showBinary
+        ,TestLabel "Show Unary" showUnary
+    ]
+
+showNb = "2.0" ~=? show (Numb 2)
+showVar = "a" ~=? show (Var "a")
+showLongVar = "aTTbbhiaejoah" ~=? show (Var "aTTbbhiaejoah")
+showNumVar = "a22" ~=? show (Var "a22")
+showConst ="e" ~=? show (Const "e")
+showErr = "TestErr" ~=? show (ErrorTerm "TestErr")
+
+showBinary = "(a+b)"  ~=? show (Add (Var "a") (Var "b") )
+showUnary = "Ln(b)"  ~=? show (Ln (Var "b") )
+
+solverTests = TestList [
     TestLabel "Regula Falsi I " testRegula1
     ,TestLabel "Regula Falsi II " testRegula2
 --    ,TestLabel "Regula Falsi Square" testRegulaSqr

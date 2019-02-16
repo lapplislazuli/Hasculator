@@ -110,9 +110,9 @@ instance Show Term where
     show t = 
         case t of 
              Numb a     ->  show a 
-             Var a      -> show a 
-             ErrorTerm err -> show err
-             Const a -> show a 
+             Var a      ->  a 
+             ErrorTerm err ->  err
+             Const a ->  a 
              Add a b -> binaryShowHelper "+" a b 
              Sub a b -> binaryShowHelper "-" a b 
              Mul a b -> binaryShowHelper "*" a b 
