@@ -156,14 +156,9 @@ tokenize' :: String -> [String]
 tokenize' s = filter (\n -> not (n==[])) (applySeps seps (words s))
     where 
         seps = (map (\(a,b,c) -> a :: String ) dictionary)
-        applySep sep s' = flat' (map (split' sep) s')
+        applySep sep s' = concat (map (split' sep) s')
         applySeps [] s' = s'
         applySeps (x:xs) s' = applySeps xs (applySep x s')
-
-flat' :: [[String]] -> [String]
-flat' [] = []
-flat' [x] = x
-flat' (x:xs) = x ++ (flat' xs)
 
 split' :: String -> String -> [String]
 split' sep str = intersperse sep (splitOn sep str) 
