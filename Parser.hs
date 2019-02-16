@@ -94,6 +94,7 @@ applyBracket toks
     | isRight o = toks
     where (l,o,r) = splitByFirst toks
 
+
 applyUnary :: Operator -> Term -> Term 
 applyUnary op t = 
     case op of 
