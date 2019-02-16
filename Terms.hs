@@ -23,6 +23,10 @@ data Term = Add Term Term
             | Var String
             deriving (Eq,Show)
 
+safeSolve :: Either String Term -> [(String,Double)] -> Double 
+safeSolve (Right t) vars= solve t vars 
+safeSolve (Left t) _ = error  
+
 solve :: Term -> [(String,Double)]-> Double
 solve t vars = 
     case t of

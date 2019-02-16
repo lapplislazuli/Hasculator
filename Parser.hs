@@ -10,7 +10,7 @@ import Data.List
 import Data.List.Split (splitOn)
 
 
-parse :: String -> Term
+parse :: String -> Either String Term
 parse = termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize'  
 
 type Token = String 
@@ -29,14 +29,14 @@ data Operator = Plus
 dictionary :: [(Token,Operator,Natural)]
 dictionary = [("(",Lbr,2),(")",Rbr,2),("Ln",LnE,3),("Exp",ExpFn,3),("^",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
 
-termify :: [Either Operator Term] -> Term
-termify [] = Var "EmptyTermErr"
-termify [Left op] = Var "LostOperatorErr"
+termify :: [Either Operator Term] -> Either String Term
+termify [] = Left "EmptyTermErr"
+termify [Left op] = Left "LostOperatorErr"
 -- I've reached a single core term, such as a Variable or a Number (Or an already calculated Term)
-termify [Right t] = t
+termify [Right t] = Right t
 -- I've got something bigger
 termify toks
-    | (isRight next)= Var "MissingOperatorErr" -- I've got a Term in a List of Tokens as next - this should never be possible! Happens if i put (1 + 2 2 3)
+    | (isRight next)= Left "MissingOperatorErr" -- I've got a Term in a List of Tokens as next - this should never be possible! Happens if i put (1 + 2 2 3)
     | (isLeft next) =
         let 
             op = safeLeft next 
@@ -44,9 +44,9 @@ termify toks
             -- I match the operators...
             case op of 
                 -- If i got an opening bracket, I first go right from the bracket and termify that
-                Lbr -> termify (lhs ++ (applyBracket rhs))
+                Lbr -> (termify (lhs ++ (applyBracket rhs)))
                 -- Rbr -> termify ((applyBracket op lhs) ++ rhs) --This should not ever be the case?
-                Rbr -> Var "LostClosingBracketErr"
+                Rbr -> Left "LostClosingBracketErr"
                 -- I've got an operator i've declared unary (unaries are below)
                 _ | (elem op unaries) ->
                     let 
@@ -56,7 +56,7 @@ termify toks
                         step = applyUnary op rnb
                     in 
                         -- Recursive step further with one Operator less
-                        termify (lhs ++ (Right step) : rhs') 
+                        termify (lhs ++ (Right step) : rhs')
                 -- I've got an Operator i've declared binary (such as +)
                 _ | (elem op binaries) -> 
                     let
@@ -84,7 +84,7 @@ applyBracket toks
         in
             case op of 
                 Lbr         -> applyBracket (l ++ (applyBracket r))
-                Rbr         -> (Right (termify l)) : r
+                Rbr         -> (Right (safeRight (termify l))) : r
                 otherwise   -> toks -- I've got every Bracket processed!
     | isRight o = toks
     where (l,o,r) = splitByFirst toks
@@ -168,5 +168,5 @@ conc' :: String -> [String] -> [String]
 conc' _ [s] = [s]
 conc' sep (s:ss) = s:sep:(conc' sep ss)
 
-safeRight = fromRight (Var "Err")
+safeRight = fromRight (Var "SafeRightErr")
 safeLeft = fromLeft Minus

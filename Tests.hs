@@ -236,11 +236,11 @@ testLongLostBR = 1 ~=? (parSolv "( ( ( 1 + ( 1 + 0 ) ) ) + ( 2 ) ) )" [("LostClo
 ------------------------------------ 
 
 simpSolDifPar s = solDifPar s []
-solDifPar s vars = solve ((dx . parse) s) vars 
+solDifPar s vars = safeSolve ((dx . parse) s) vars 
 
 --These methods shorthand some tests
 parSolv :: String -> [(String, Double)] -> Double
-parSolv str vars = solve (parse str) vars
+parSolv str vars = safeSolve (parse str) vars
 --Solves the Term for no-Variables (or every Variable 0)
 simParSolv :: String -> Double 
 simParSolv str = (parSolv str []) 
