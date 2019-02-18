@@ -86,7 +86,7 @@ applyBracket toks
             case op of 
                 Lbr         -> applyBracket (l ++ (applyBracket r))
                 Rbr         -> (Right (safeRight (termify l))) : r
-                otherwise   -> toks -- I've got every Bracket processed!
+                otherwise   -> [Right (ErrorTerm "LostOpeningBracketErr")] -- I've got every Bracket processed!
     | isRight o = toks
     where (l,o,r) = splitByFirst toks
 

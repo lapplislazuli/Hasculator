@@ -31,10 +31,18 @@ coreParserTests = TestList [
     ,TestLabel "NoConst" parConstExtra
 
     ,TestLabel "Lost Bracket" lostBracket
+    ,TestLabel "Multiple Lost Bracket" lostBracket2
+    ,TestLabel "Lost second Bracket" lostBracket3
     ,TestLabel "Missing Operator" tooManyTerms
     ,TestLabel "Missing Arguments" missingArgs
     ,TestLabel "Empty Term" emptyTerm
     ,TestLabel "Empty Term (Empty Brackets)" emptyBrackets
+
+    ,TestLabel "Lost opening Bracket I" openBrackets1
+    ,TestLabel "Lost nested Opening Brackets" openBrackets2
+    ,TestLabel "Lost second Opening Brackets" openBrackets3
+    ,TestLabel "Multiple lost open Brackets" openBrackets4
+    ,TestLabel "Open Br -> Term" openBrackets5
     ]
 
 --Simple Parsing
@@ -50,10 +58,18 @@ parDoubleBracketedNumb = 1 ~=? (simParSolv "( ( 1 ) )")
 
 -- ErrorHandling
 lostBracket = ErrorTerm "LostClosingBracketErr" ~=? parse "1 )"
+lostBracket2 = ErrorTerm "LostClosingBracketErr" ~=? parse "1 ))"
+lostBracket3 = ErrorTerm "LostClosingBracketErr" ~=? parse "( 1 ) + a )"
 tooManyTerms = ErrorTerm "MissingOperatorErr" ~=? parse "1 a" 
 missingArgs = ErrorTerm "LostOperatorErr" ~=? parse "+"
 emptyTerm = ErrorTerm "EmptyTermErr" ~=? parse " "
 emptyBrackets = ErrorTerm "SafeRightErr" ~=? parse "( )"
+
+openBrackets1 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( a + b "
+openBrackets3 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( a +1 ) + ( 4"
+openBrackets2 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( ( 1 )"
+openBrackets4 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( ( ( 1 "
+openBrackets5 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( 1 "
 
 tokenizerTests = TestList [
     TestLabel "NoSpaces I" testNsp1
@@ -323,6 +339,7 @@ specialTests = TestList [
     ,TestLabel "Greedy Functions II " testGF2
     ,TestLabel "Unnecessary Brackets" testUnBr
     ,TestLabel "Long Lost Bracket" testLongLostBR
+    ,TestLabel "Long Lost opening Bracket" testLongLostBR2
     ]
 
 -- All Originate from problems with the brackets
@@ -331,6 +348,7 @@ testGF1 = (truncate' ((exp 3) + 3) 8) ~=? truncate' (simParSolv "( Exp ( 1 + 2 )
 testGF2 = (truncate' ((log 3) * 3) 8) ~=? truncate' (simParSolv "( ( Ln ( 1 + 2 ) ) * 3 ) ") 8
 testUnBr = 5 ~=? simParSolv "( ( 1 + ( 2 ) ) ) + ( 1 + ( ( 1 ) + ( 0 ) ) )"
 testLongLostBR = ErrorTerm "LostClosingBracketErr" ~=? parse "( ( ( 1 + ( 1 + 0 ) ) ) + ( 2 ) ) )"
+testLongLostBR2 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( ( ( ( ( 1 + ( 1 + 0 ) ) ) + ( 2 ) ) )"
 
 ------------------------------------
 -- Helpers
