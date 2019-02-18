@@ -66,7 +66,7 @@ emptyTerm = ErrorTerm "EmptyTermErr" ~=? parse " "
 emptyBrackets = ErrorTerm "SafeRightErr" ~=? parse "( )"
 
 openBrackets1 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( a + b "
-openBrackets3 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( a +1 ) + ( 4"
+openBrackets3 = Add (Numb 1) (ErrorTerm "LostOpeningBracketErr") ~=? parse "( 1 ) + ( 4"
 openBrackets2 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( ( 1 )"
 openBrackets4 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( ( ( 1 "
 openBrackets5 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( 1 "

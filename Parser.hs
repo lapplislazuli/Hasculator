@@ -87,7 +87,7 @@ applyBracket toks
                 Lbr         -> applyBracket (l ++ (applyBracket r))
                 Rbr         -> (Right (safeRight (termify l))) : r
                 otherwise   -> [Right (ErrorTerm "LostOpeningBracketErr")] -- I've got every Bracket processed!
-    | isRight o = toks
+    | isRight o = [Right (ErrorTerm "LostOpeningBracketErr")]
     where (l,o,r) = splitByFirst toks
 
 
