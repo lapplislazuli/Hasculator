@@ -11,9 +11,11 @@ import Data.List.Split (splitOn)
 
 
 parse :: String -> Term
-parse = cleanTermify . termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize'  
+parse = catchErrorTerms . termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize'  
 
 type Token = String 
+type Parsable = Either Operator Term --For Readability - some declarations where wild
+type Parsed = Either Term String -- TODO: Maybe use ErrorMonad?
 
 data Operator = Plus
                 | StarStar
@@ -27,14 +29,16 @@ data Operator = Plus
                 | Rbr
                 deriving (Eq,Show)           
 
+--TODO: Maybe use different datatype? Map? Array?
 dictionary :: [(Token,Operator,Natural)]
 dictionary = [("(",Lbr,2),(")",Rbr,2),("!",Neg,3),("Ln",LnE,3),("Exp",ExpFn,3),("^",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
 
-cleanTermify :: Either String Term -> Term
-cleanTermify (Left err) = ErrorTerm err 
-cleanTermify (Right t)  = t 
+-- This Function takes Either Term String and makes an errorterm if there was an error
+catchErrorTerms :: Parsed -> Term
+catchErrorTerms (Left err) = ErrorTerm err 
+catchErrorTerms (Right t)  = t 
 
-termify :: [Either Operator Term] -> Either String Term
+termify :: [Parsable] -> Parsed
 termify [] = Left "EmptyTermErr"
 termify [Left op] = Left "LostOperatorErr"
 -- I've reached a single core term, such as a Variable or a Number (Or an already calculated Term)
@@ -81,7 +85,7 @@ termify toks
        -- I split the List by the Lefthandside (LHS), Operator and Righthandside (RHS)
        (lhs,next,rhs) = splitByFirst toks
 
-applyBracket :: [Either Operator Term] -> [Either Operator Term]
+applyBracket :: [Parsable] -> [Parsable]
 applyBracket toks
     | isLeft o =
         let 
@@ -121,7 +125,7 @@ tokenToOperator t =
         then Right t 
         else Left (fromJust mop)
 
-detectVarsAndNumbers :: [Either Operator Token] -> [Either Operator Term]
+detectVarsAndNumbers :: [Either Operator Token] -> [Parsable]
 detectVarsAndNumbers lst = map f lst 
             where f (Right e) = Right (tokenToTerm e )
                   f (Left e) = Left e   
@@ -133,21 +137,21 @@ tokenToTerm tok@(s:ss)
             | otherwise                     = Var tok
 
 -- Assings the priority of each Term or Operator to it
-precedence :: Either Operator Term -> (Natural, Either Operator Term)
+precedence :: Parsable -> (Natural, Parsable)
 precedence o = (priorityOf o,o)
     where 
         priorityOf (Right x) =  15
         priorityOf (Left x) = fromJust (lookup x ( map (\(a,b,c) -> (b,c)) dictionary))
 
-splitByFirst :: [Either Operator Term] -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
+splitByFirst :: [Parsable] -> ([Parsable],Parsable,[Parsable])
 splitByFirst toks = splitBy (firstOperator toks) toks
 
-splitBy :: Either Operator Term -> [Either Operator Term] -> ([Either Operator Term],Either Operator Term,[Either Operator Term])
+splitBy :: Parsable -> [Parsable] -> ([Parsable],Parsable,[Parsable])
 splitBy ops toks= 
                 let (p:ps) = splitOn [ops] toks
                 in (p, ops, intercalate [ops] ps)
 
-firstOperator :: [Either Operator Term] -> Either Operator Term
+firstOperator :: [Parsable] -> Parsable
 firstOperator os = snd (foldl step (17,Right (ErrorTerm "PriorityErr")) (map precedence os))
                         where 
                             step old@(a,b) new@(c,d) 
