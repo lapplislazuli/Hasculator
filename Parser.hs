@@ -11,32 +11,24 @@ import Data.List.Split (splitOn)
 
 
 parse :: String -> Term
-parse = catchErrorTerms . termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize'  
+parse = cleanTermify . termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize'  
 
 type Token = String 
 type Parsable = Either Operator Term --For Readability - some declarations where wild
-type Parsed = Either Term String -- TODO: Maybe use ErrorMonad?
+type Parsed = Either String Term-- TODO: Maybe use ErrorMonad?
 
-data Operator = Plus
-                | StarStar
-                | Star
-                | DivSlash
-                | LnE
-                | ExpFn
-                | Minus
-                | Neg
-                | Lbr
-                | Rbr
+data Operator = Plus | StarStar | Star
+                | DivSlash | LnE | ExpFn
+                | Minus | Neg | Lbr | Rbr
                 deriving (Eq,Show)           
 
 --TODO: Maybe use different datatype? Map? Array?
 dictionary :: [(Token,Operator,Natural)]
 dictionary = [("(",Lbr,2),(")",Rbr,2),("!",Neg,3),("Ln",LnE,3),("Exp",ExpFn,3),("^",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
 
--- This Function takes Either Term String and makes an errorterm if there was an error
-catchErrorTerms :: Parsed -> Term
-catchErrorTerms (Left err) = ErrorTerm err 
-catchErrorTerms (Right t)  = t 
+cleanTermify :: Parsed -> Term
+cleanTermify (Left err) = ErrorTerm err 
+cleanTermify (Right t)  = t 
 
 termify :: [Parsable] -> Parsed
 termify [] = Left "EmptyTermErr"
