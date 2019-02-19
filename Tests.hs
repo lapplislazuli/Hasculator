@@ -16,7 +16,7 @@ allTests = TestList [
     ,TestLabel "NegationTests" negaterTests
     ,TestLabel "VariableTests" variableTests
     ,TestLabel "Basic DifferentiatorTests" coreDifferTests
---    ,TestLabel "SolverTests" solverTests --TODO: These sometimes do not stop?
+    ,TestLabel "SolverTests" solverTests --TODO: These sometimes do not stop?
     ,TestLabel "SpecialTests" specialTests
     ]
     
@@ -250,19 +250,18 @@ repBinUn = (Add (Ln (Var "a")) (Exp (Var "b"))) ~=? reparse (Add (Ln (Var "a")) 
 solverTests = TestList [
     TestLabel "Regula Falsi I " testRegula1
     ,TestLabel "Regula Falsi II " testRegula2
---    ,TestLabel "Regula Falsi Square" testRegulaSqr
---    ,TestLabel "Regula Wrong input" testRegulaWIP
+    ,TestLabel "Regula Falsi Square" testRegulaSqr
+    ,TestLabel "Regula Wrong input" testRegulaWIP
     ,TestLabel "Regula Falsi x^3" testRegulaPol
---    ,TestLabel "Regula Falsi -x^3" testRegulaPol2
+    ,TestLabel "Regula Falsi -x^3" testRegulaPol2
     ]
 
-testRegula1 =  (-2) ~=? round (regulaFalsi (parse "x + 2") 1000 (-4) 4 )
-testRegula2 =  (2) ~=? round (regulaFalsi (parse "x - 2") 1000 (-5) 5 ) --TODO: Something is Wrong here!
-testRegulaPol =  (1) ~=? round (regulaFalsi (parse "x^3 -1") 1000 (0) 2 )
---testRegulaPol2 =  (-1) ~=? round (regulaFalsi (parse "(0-1)*x^3 +1") 1000 (-2) 1 )
---TODO: How do i check for error messages?
---testRegulaSqr =  assertFailure "InvalidInput - a < b required"  (round (regulaFalsi (parse "x**2 + 2") 100 (-10) 10 ))
---testRegulaWIP =  FAILURE ~=? round (regulaFalsi (parse "x**2 + 2") 100 10 (-10) )
+testRegula1 =  (-2) ~=? round (regulaFalsi' (parse "x + 2") (-4) 4 )
+testRegula2 =  (2) ~=? round (regulaFalsi' (parse "x - 2") (-5) 5 ) --TODO: Something is Wrong here!
+testRegulaPol = (1) ~=? round (regulaFalsi' (parse "x^3 -1") (0) 2 )
+testRegulaPol2 =  (-1) ~=? round (regulaFalsi' (parse "(0-1)*x^3 +1")  (-2) 1 )
+testRegulaSqr =  Left "InvalidInput - a < b required" ~=? (regulaFalsi (parse "x**2 + 2") (10) (-10) )
+testRegulaWIP =  Left "InvalidInput - f(a) < 0 and f(b) > 0 required!" ~=? (regulaFalsi (parse "x**2 + 2") (-10) (10) )
 
 coreDifferTests = TestList [
     TestLabel "No Vars I " testDFVar1
@@ -366,6 +365,13 @@ simParSolv str = (parSolv str [])
 
 reparse :: Term -> Term 
 reparse = parse . show
+
+regulaFalsi' :: Term -> Double -> Double -> Double
+regulaFalsi' t a b = removeErrDouble (regulaFalsi t a b)
+
+removeErrDouble :: Either String Double -> Double
+removeErrDouble (Right d) = d
+removeErrDouble (Left e) = error e 
 
 truncate' :: Double -> Int -> Double
 truncate' x n = (fromIntegral (floor (x * t))) / t
