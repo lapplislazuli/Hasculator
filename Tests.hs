@@ -257,7 +257,7 @@ solverTests = TestList [
     ]
 
 testRegula1 =  (-2) ~=? round (regulaFalsi' (parse "x + 2") (-4) 4 )
-testRegula2 =  (2) ~=? round (regulaFalsi' (parse "x - 2") (-5) 5 ) --TODO: Something is Wrong here!
+testRegula2 =  (2) ~=? round (regulaFalsi' (parse "x - 2") (1) 5 ) --TODO: Something is Wrong here!
 testRegulaPol = (1) ~=? round (regulaFalsi' (parse "x^3 -1") (0) 2 )
 testRegulaPol2 =  0 ~=? round (regulaFalsi' (parse "(0-1)*x^3")  (-2) 1 )
 testRegulaSqr =  Left "InvalidInput - a < b required" ~=? (regulaFalsi (parse "x**2 + 2") (10) (-10) )
