@@ -1,6 +1,8 @@
 module Tests.ParserTests (
     coreParserTests,
-    tokenizerTests
+    tokenizerTests,
+    precedenceTests,
+    negaterTests
 )where 
 
 import Tests.TestHelpers
@@ -74,3 +76,66 @@ testMsp2 = 10 ~=? (simParSolv "(1+ 2* 4)+1 ")
 testFsp1 = 6 ~=? (simParSolv " 3 * 2 ")
 testOfsp1 = 10 ~=? (simParSolv "(1  + 2*  4) +1   ")
 testOfsp2 = 10 ~=? (simParSolv "   (    1+    2* 4   )    +1 ")
+
+
+
+precedenceTests = TestList [
+    TestLabel " Point > Stick"      testPS
+    ,TestLabel " Power > Point"     testPP
+    ,TestLabel "Fns > Point"        testFPoi
+    ,TestLabel "Fns > Power"        testFPow
+    ,TestLabel "Brackets Unary"     testBU
+    ,TestLabel "Brackets Binary"    testBB
+    ,TestLabel "Stick = Stick"      testSES
+    ,TestLabel "Power = Power"      testPEP
+    
+    ,TestLabel "Negate > Stick"      testNegSt
+    ,TestLabel "Negate > Point"      testNegPt
+    ,TestLabel "Negate = Fns I "      testNegFn1
+    ,TestLabel "Negate = Fns II"      testNegFn2
+    
+    ]
+
+testPS = 5 ~=? (simParSolv "1 + 2 * 2")
+testPP = 12 ~=? (simParSolv "3 * 2 ^ 2 ")
+testFPoi = (truncate' ((exp 3) * 3) 8) ~=? truncate' (simParSolv "Exp 3 * 3") 8
+testFPow = (truncate' ((exp 3) ** 2) 8) ~=? truncate' (simParSolv "Exp 3 ^ 2 ") 8
+testBU = truncate' (exp 3) 8 ~=? truncate' (simParSolv "Exp ( 1 + 2 )") 8
+testBB = 6 ~=? (simParSolv "( 1 + 1 ) * 3")
+testSES = 3 ~=? (simParSolv "2 + 2 - 1")
+testPEP = 8 ~=? (simParSolv "( 1 * 2 ) + ( 2 * 3 )")
+
+testNegSt = 1 ~=? simParSolv "!1+2"
+testNegPt = (-6) ~=? simParSolv "!2*3"
+testNegFn1 = ErrorTerm "MissingOperatorErr" ~=? parse "! Exp 0"
+testNegFn2 = ErrorTerm "MissingOperatorErr" ~=? parse "Exp ! 0.5" 
+
+negaterTests = TestList [
+    TestLabel "Negate Positive Number" negPosNum
+    ,TestLabel "Negate Negative Number" negNegNum
+    ,TestLabel "Double Negate Number"negnegNum
+    ,TestLabel "Negate Var" negVar 
+    ,TestLabel "DoubleNegate Var" negnegVar
+    ,TestLabel "NegateBrackets" negBrackets
+    ,TestLabel "Negate Zero" negZero
+
+    ,TestLabel "Negate Addition I" negAdd
+    ,TestLabel "Negate Addition II" negSub
+    ,TestLabel "Negate Mult" negMul 
+    ,TestLabel "Negate Fn I" negFn1
+    ,TestLabel "Negate Fn II" negFn2
+    ]
+
+negPosNum = (-5) ~=? simParSolv "!5"
+negNegNum = 5   ~=? simParSolv "!(0-5)"
+negnegNum = 5   ~=? simParSolv "!(!5)"
+negVar    = (-3)   ~=? parSolv "!a" [("a",3)]
+negnegVar    = 3   ~=? parSolv "!(!a)" [("a",3)]
+negBrackets = (-4) ~=? simParSolv "!(4)"
+negZero = 0 ~=? simParSolv "!0"
+
+negAdd = (-3) ~=? simParSolv "!(1+2)"
+negSub = 3 ~=? simParSolv "!(1-4)"
+negMul = (-6) ~=? simParSolv "!(2*3)"
+negFn1 = (-1) ~=? simParSolv "!(Exp 0)" 
+negFn2 = (-1) ~=? simParSolv "!(Ln e)"
