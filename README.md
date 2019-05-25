@@ -12,7 +12,7 @@ The Hasculator can currently:
 
 But there will be more, of course!
 ## Overview
-The top-class, **Calculator.hs** combines all parts and will (later) contain the main-method. 
+The top-class, **Program.hs** combines all parts and will (later) contain the main-method. 
 
 
 **Term.hs** contains the primary data-structure *Term*, rules for simplification and solving.

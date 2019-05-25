@@ -1,8 +1,9 @@
-module Calculator where
+module Main where
 
 import Differentiator
 import Solver
 import Terms
 import Parser
 
-import Tests.TestSummary
+main :: IO () 
+main = print "Hello!"

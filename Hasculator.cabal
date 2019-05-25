@@ -1,19 +1,49 @@
+Cabal-Version: 2.4
+
 Name:          Hasculator
-Version:        0.1.1
+Version:        0.2.0
 
 Synopsis:       String-Parsing and various Term-utilities 
 Description:    The Hasculator parses Strings into Terms, and can solve and differentiate Terms. 
                 Later Distributions will include also search for maxima/minima aswell as finding zero-points
-Author:         Leonhard 
-Maintainer:     Not Leonhard 
+author:              Leonhard Applis
+maintainer:          Leonhard.Applis@Protonmail.com
 
-Cabal-Version:  >= 1.2
+bug-reports:         https://github.com/Twonki/Hasculator/issues
 
-library
-    Exposed-Modules:    Terms
-                        Parser
+extra-source-files:  README.md
+
+
+executable Hasculator
+    main-is:            Program.hs 
+    other-modules:      Terms,
+                        Parser, 
                         Solver
-                        Calculator
-    Build-Depends:      base >= 2.0
-                        split >=0.2.0
-                        Hunit >= 1.6
+
+    Build-Depends:      base,
+                        split ^>=0.2.3.3
+
+    hs-source-dirs:      Src
+    default-language:    Haskell2010
+
+
+Test-Suite HUnitTestSuite
+  type:                exitcode-stdio-1.0
+  main-is:             UnitTests.hs
+  hs-source-dirs:      Test
+                       Src
+  other-modules:       Terms,
+                       Parser, 
+                       Solver,
+                       DifferTests,
+                       ParserTests,
+                       ReadNShowTests,
+                       SolverTests,
+                       TestHelpers
+  build-depends:       base,
+                       test-framework,
+                       test-framework-hunit,
+                       HUnit,
+                       split ^>=0.2.3.3
+
+  default-language: Haskell2010
