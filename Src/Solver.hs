@@ -11,7 +11,7 @@ fx t v = solve t [("x",v)]
 -- Sweeter Input and iterations bound to 250 
 -- 250 is a-ok for most terminations and don't take that long
 regulaFalsi250 :: Term -> Double -> Double -> ErrDouble
-regulaFalsi250 t a b = failableRegulaFalsi t 250 a b
+regulaFalsi250 t = failableRegulaFalsi t 250
 
 failableRegulaFalsi :: Term -> Int -> Double -> Double -> ErrDouble
 failableRegulaFalsi t i a b

@@ -33,7 +33,7 @@ solve t vars =
         Mul a b -> solve a vars * solve b vars
         Div a b  -> solve a vars / solve b vars
         Ln t -> log (solve t vars)
-        Pow a b -> (solve a vars ** (solve b vars))
+        Pow a b -> solve a vars ** solve b vars
         Exp t -> solve (Pow (Const "e") t) vars
         Numb n -> n 
         Const c -> catchEmpty (resolveConstant c)
@@ -42,7 +42,7 @@ solve t vars =
 
 simplify :: Term -> Term
 simplify t = 
-    if (not (hasVariables t))
+    if not (hasVariables t)
     then Numb (solve t [])
     else 
         case t of
@@ -72,7 +72,7 @@ simplify t =
             (Exp t)     -> Exp (simplify t)
 
 extractVariables :: Term -> [String]
-extractVariables (Var c) = c:[]
+extractVariables (Var c) = [c]
 extractVariables (Numb _) = [] -- Any Value that is not a variable will yield []
 extractVariables (Const _) = [] -- Any Value that is not a variable will yield []
 extractVariables (Add a b) = extractVariables a ++ extractVariables b
@@ -84,13 +84,13 @@ extractVariables (Ln a)  = extractVariables a
 extractVariables (Exp a) = extractVariables a
 
 hasVariables :: Term -> Bool
-hasVariables t =  length (extractVariables t) > 0
+hasVariables t =  not null (extractVariables t)
             
 resolveConstant :: String -> Maybe Double
 resolveConstant c = resolveVariable c constants
 
 constants :: [(String,Double)]
-constants = (['e'], (exp 1)):[]
+constants = [(['e'], exp 1)]
 
 resolveVariable :: String -> [(String,Double)] -> Maybe Double
 resolveVariable _ [] = Nothing
@@ -104,7 +104,7 @@ catchEmpty Nothing = 0
 catchEmpty (Just a) = a
 
 negateTerm :: Term -> Term 
-negateTerm t = Mul (Numb (-1)) t
+negateTerm = Mul (Numb (-1))
 
 instance Show Term where 
     show t = 

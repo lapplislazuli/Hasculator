@@ -22,9 +22,9 @@ diff t c=
 
 diffVariable :: String -> String -> Term
 diffVariable v c =
-        if (v == c) 
-            then Numb 1 
-            else Numb 0
+        if v == c
+        then Numb 1 
+        else Numb 0
 
 --Shortcut for diffing x
 dx :: Term -> Term
