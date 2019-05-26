@@ -2,7 +2,7 @@
 module Parser 
 where 
 
-import Data.Maybe (fromJust,isJust)
+import Data.Maybe (fromJust,isJust,isNothing)
 import Data.Either 
 import Data.Either.Extra(fromRight,fromLeft)
 import Numeric.Natural
@@ -12,7 +12,7 @@ import Data.List.Split (splitOn)
 
 
 parse :: String -> Term
-parse = cleanTermify . termify . detectVarsAndNumbers . (map tokenToOperator) . tokenize'  
+parse = cleanTermify . termify . detectVarsAndNumbers . map tokenToOperator . tokenize'  
 
 type Token = String 
 type Parsable = Either Operator Term --For Readability - some declarations where wild
@@ -38,19 +38,19 @@ termify [Left op] = Left "LostOperatorErr"
 termify [Right t] = Right t
 -- I've got something bigger
 termify toks
-    | (isRight next)= Left "MissingOperatorErr" -- I've got a Term in a List of Tokens as next - this should never be possible! Happens if i put (1 + 2 2 3)
-    | (isLeft next) =
+    | isRight next= Left "MissingOperatorErr" -- I've got a Term in a List of Tokens as next - this should never be possible! Happens if i put (1 + 2 2 3)
+    | isLeft next =
         let 
             op = safeLeft next 
         in 
             -- I match the operators...
             case op of 
                 -- If i got an opening bracket, I first go right from the bracket and termify that
-                Lbr -> (termify (lhs ++ (applyBracket rhs)))
+                Lbr -> termify (lhs ++ applyBracket rhs)
                 -- Rbr -> termify ((applyBracket op lhs) ++ rhs) --This should not ever be the case?
                 Rbr -> Left "LostClosingBracketErr"
                 -- I've got an operator i've declared unary (unaries are below)
-                _ | (elem op unaries) ->
+                _ | op `elem` unaries ->
                     let 
                         -- Get the right Term and apply the Operator to form new Term
                         rnb = safeRight (head rhs)  -- right neighboor 
@@ -58,9 +58,9 @@ termify toks
                         step = applyUnary op rnb
                     in 
                         -- Recursive step further with one Operator less
-                        termify (lhs ++ (Right step) : rhs')
+                        termify (lhs ++ Right step : rhs')
                 -- I've got an Operator i've declared binary (such as +)
-                _ | (elem op binaries) -> 
+                _ | op `elem` binaries -> 
                     let
                         -- get Both Neighboors as Terms
                         rnb  = safeRight (head rhs) 
@@ -85,9 +85,9 @@ applyBracket toks
             op = safeLeft o
         in
             case op of 
-                Lbr         -> applyBracket (l ++ (applyBracket r))
-                Rbr         -> (Right (safeRight (termify l))) : r
-                otherwise   -> [Right (ErrorTerm "LostOpeningBracketErr")] -- I've got every Bracket processed!
+                Lbr         -> applyBracket (l ++ applyBracket r)
+                Rbr         -> Right (safeRight (termify l)) : r
+                _           -> [Right (ErrorTerm "LostOpeningBracketErr")] -- I've got every Bracket processed!
     | isRight o = [Right (ErrorTerm "LostOpeningBracketErr")]
     where (l,o,r) = splitByFirst toks
 
@@ -95,7 +95,7 @@ applyBracket toks
 applyUnary :: Operator -> Term -> Term 
 applyUnary op t = 
     case op of 
-        Neg     -> (negateTerm t) 
+        Neg     -> negateTerm t
         LnE     -> Ln  t 
         ExpFn   -> Exp t
         -- Additional Unary Operators
@@ -114,20 +114,20 @@ tokenToOperator :: Token -> Either Operator Token
 tokenToOperator t = 
     let mop = lookup t ( map (\(a,b,c) -> (a,b)) dictionary)
     in 
-        if mop == Nothing
+        if isNothing mop
         then Right t 
         else Left (fromJust mop)
 
 detectVarsAndNumbers :: [Either Operator Token] -> [Parsable]
-detectVarsAndNumbers lst = map f lst 
+detectVarsAndNumbers = map f  
             where f (Right e) = Right (tokenToTerm e )
                   f (Left e) = Left e   
 
 tokenToTerm :: Token -> Term 
 tokenToTerm tok@(s:ss) 
-            | not (elem s ['a'..'z'])       = Numb (read tok :: Double)
-            | elem tok (map fst constants)  = Const tok
-            | otherwise                     = Var tok
+            | s `notElem` ['a'..'z']          = Numb (read tok :: Double)
+            | tok `elem` map fst constants    = Const tok
+            | otherwise                       = Var tok
 
 -- Assings the priority of each Term or Operator to it
 precedence :: Parsable -> (Natural, Parsable)
@@ -152,16 +152,15 @@ firstOperator os = snd (foldl step (17,Right (ErrorTerm "PriorityErr")) (map pre
                                 | otherwise = old
 
 tokenize' :: String -> [String]
-tokenize' s = filter (\n -> not (n==[])) (applySeps seps (words s))
+tokenize' s = filter (\n -> n/=[]) (applySeps seps (words s))
     where 
-        seps = (map (\(a,b,c) -> a :: String ) dictionary)
-        applySep sep s' = concat (map (split' sep) s')
-        applySeps [] s' = s'
-        applySeps (x:xs) s' = applySeps xs (applySep x s')
+        seps = map (\(a,b,c) -> a :: String ) dictionary
+        applySep sep = concatMap (split' sep)
+        applySeps xs s' = foldl (flip applySep) s' xs
 
 split' :: String -> String -> [String]
 split' sep str = intersperse sep (splitOn sep str) 
 
-safeRight = fromRight (ErrorTerm "SafeRightErr")
 
+safeRight = fromRight (ErrorTerm "SafeRightErr")
 safeLeft = fromLeft Minus
