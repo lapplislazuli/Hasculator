@@ -1,12 +1,17 @@
-module Tests.TestSummary (
-    allTests
-)where 
+module Main where
 
 import Tests.ParserTests
 import Tests.ReadNShowTests
 import Tests.DifferTests 
 import Tests.SolverTests
 import Tests.TestHelpers
+
+import Test.Framework
+import Test.Framework.Providers.HUnit
+
+tests = hUnitTestToTests allTests
+
+main = defaultMain tests
 
 allTests = TestList [
      TestLabel "ParserTests" coreParserTests
