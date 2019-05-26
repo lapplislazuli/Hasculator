@@ -11,6 +11,17 @@
   (major1) == 0 && (major2) == 2 && (minor) <= 0)
 #endif /* MIN_VERSION_Hasculator */
 
+/* package HUnit-1.6.0.0 */
+#ifndef VERSION_HUnit
+#define VERSION_HUnit "1.6.0.0"
+#endif /* VERSION_HUnit */
+#ifndef MIN_VERSION_HUnit
+#define MIN_VERSION_HUnit(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  6 || \
+  (major1) == 1 && (major2) == 6 && (minor) <= 0)
+#endif /* MIN_VERSION_HUnit */
+
 /* package base-4.9.1.0 */
 #ifndef VERSION_base
 #define VERSION_base "4.9.1.0"
@@ -43,6 +54,28 @@
   (major1) == 0 && (major2) <  2 || \
   (major1) == 0 && (major2) == 2 && (minor) <= 3)
 #endif /* MIN_VERSION_split */
+
+/* package test-framework-0.8.2.0 */
+#ifndef VERSION_test_framework
+#define VERSION_test_framework "0.8.2.0"
+#endif /* VERSION_test_framework */
+#ifndef MIN_VERSION_test_framework
+#define MIN_VERSION_test_framework(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  8 || \
+  (major1) == 0 && (major2) == 8 && (minor) <= 2)
+#endif /* MIN_VERSION_test_framework */
+
+/* package test-framework-hunit-0.3.0.2 */
+#ifndef VERSION_test_framework_hunit
+#define VERSION_test_framework_hunit "0.3.0.2"
+#endif /* VERSION_test_framework_hunit */
+#ifndef MIN_VERSION_test_framework_hunit
+#define MIN_VERSION_test_framework_hunit(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  3 || \
+  (major1) == 0 && (major2) == 3 && (minor) <= 0)
+#endif /* MIN_VERSION_test_framework_hunit */
 
 /* tool cpphs-1.20.8 */
 #ifndef TOOL_VERSION_cpphs
@@ -166,7 +199,7 @@
 #endif /* MIN_TOOL_VERSION_strip */
 
 #ifndef CURRENT_COMPONENT_ID
-#define CURRENT_COMPONENT_ID "Hasculator-0.2.0-inplace-Hasculator"
+#define CURRENT_COMPONENT_ID "Hasculator-0.2.0-inplace-HUnitTestSuite"
 #endif /* CURRENT_COMPONENT_ID */
 #ifndef CURRENT_PACKAGE_VERSION
 #define CURRENT_PACKAGE_VERSION "0.2.0"

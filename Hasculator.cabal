@@ -21,6 +21,7 @@ executable Hasculator
                         Solver
 
     Build-Depends:      base,
+                        extra,
                         split ^>=0.2.3.3
 
     hs-source-dirs:      Src
@@ -35,12 +36,13 @@ Test-Suite HUnitTestSuite
   other-modules:       Terms,
                        Parser, 
                        Solver,
-                       DifferTests,
-                       ParserTests,
-                       ReadNShowTests,
-                       SolverTests,
-                       TestHelpers
+                       Tests.DifferTests,
+                       Tests.ParserTests,
+                       Tests.ReadNShowTests,
+                       Tests.SolverTests,
+                       Tests.TestHelpers
   build-depends:       base,
+                       extra,
                        test-framework,
                        test-framework-hunit,
                        HUnit,

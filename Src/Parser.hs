@@ -3,7 +3,8 @@ module Parser
 where 
 
 import Data.Maybe (fromJust,isJust)
-import Data.Either
+import Data.Either 
+import Data.Either.Extra(fromRight,fromLeft)
 import Numeric.Natural
 import Terms
 import Data.List
@@ -162,4 +163,5 @@ split' :: String -> String -> [String]
 split' sep str = intersperse sep (splitOn sep str) 
 
 safeRight = fromRight (ErrorTerm "SafeRightErr")
+
 safeLeft = fromLeft Minus
