@@ -18,6 +18,7 @@ executable Hasculator
     main-is:            Program.hs 
     other-modules:      Terms,
                         Parser, 
+                        Differentiator,
                         Solver
 
     Build-Depends:      base,
@@ -36,6 +37,7 @@ Test-Suite HUnitTestSuite
   other-modules:       Terms,
                        Parser, 
                        Solver,
+                       Differentiator,
                        Tests.DifferTests,
                        Tests.ParserTests,
                        Tests.ReadNShowTests,

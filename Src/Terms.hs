@@ -84,7 +84,7 @@ extractVariables (Ln a)  = extractVariables a
 extractVariables (Exp a) = extractVariables a
 
 hasVariables :: Term -> Bool
-hasVariables t =  not null (extractVariables t)
+hasVariables t =  not $ null (extractVariables t)
             
 resolveConstant :: String -> Maybe Double
 resolveConstant c = resolveVariable c constants
