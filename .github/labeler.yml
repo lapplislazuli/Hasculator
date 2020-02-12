@@ -1,0 +1,25 @@
+
+Test:
+- Test/*
+Code:
+- Src/*
+
+Documentation:
+- README.md
+- CONTRIBUTING.md
+- LICENCE
+
+Configuration:
+- .github/*.yml
+- .github/*.yaml
+- .github/**/*.yml
+- .github/**/*.yaml
+- .github/workflow/*
+- .*.cabal
+- Setup.hs
+- Hopinosis.cabal
+- .gitignore
+
+Git:
+- .github/*
+- .gitignore
