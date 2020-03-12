@@ -24,11 +24,14 @@ failableRegulaFalsi t i a b
 -- Output: xKoord of 0-Point
 
 regulaFalsi :: (Double -> Double) -> Int -> Double -> Double -> Double
-regulaFalsi _ 0 a b
-    | abs a >  abs b = b
-    | abs b >= abs a = a
+-- end-step: all iterations taken
+regulaFalsi f 0 a b
+    | abs (f a) >  abs (f b) = b
+    | abs (f b) >= abs (f a) = a
+-- recursive step
 regulaFalsi f n a b
-    | f c <= 0 = regulaFalsi f (n-1) c b
-    | f c >  0 = regulaFalsi f (n-1) a c 
+    | f c * f b > 0 = regulaFalsi f (n-1) c b
+    | f c * f a > 0 = regulaFalsi f (n-1) a c
+    | otherwise = regulaFalsi f 0 a c
     where 
-        c  = (f b * f a - f a * b) / ( f b - f a)
+        c  = (f a * b - f b * a) / ( f a - f b)

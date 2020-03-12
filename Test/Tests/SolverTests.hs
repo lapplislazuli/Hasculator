@@ -57,21 +57,45 @@ testTooMuch =
 
 
 solverTests = TestList [
-    TestLabel "Regula Falsi I " testRegula1
-    ,TestLabel "Regula Falsi II " testRegula2
---    ,TestLabel "Regula Falsi Square" testRegulaSqr
- --   ,TestLabel "Regula Wrong input" testRegulaWIP --TODO: This one does not terminate???
-    ,TestLabel "Regula Falsi x^3" testRegulaPol
---    ,TestLabel "Regula Falsi -x^3" testRegulaPol2 --TODO: This one Errors
+    TestLabel "Regula Falsi x + 2 " testRegula1
+    ,TestLabel "Regula Falsi x - 2 " testRegula2
+    , TestLabel "Regula Falsi x + 3 " testRegula3
+    , TestLabel "Regula Falsi x -3 " testRegula4
+    , TestLabel "Regula Falsi 2x-20" testRegula5
+    , TestLabel "Regula Falsi x" testRegula6
+    , TestLabel "Regula Falsi x^3" testRegula7
+    , TestLabel "Regula Falsi x*x*x" testRegula8
+    , TestLabel "Regula Falsi x^5" testRegula9
+    ,TestLabel "Regula Falsi x^3-1" testRegulaPol
+    ,TestLabel "Regula Falsi x^3+1" testRegulaPol2
     ]
 
 testRegula1 =  
     -2 ~=? round (regulaFalsi' (parse "x + 2") (-4) 4 )
 testRegula2 =  
-    2 ~=? round (regulaFalsi' (parse "x - 2") (1) 5 ) --TODO: Something is Wrong here!
+    2 ~=? round (regulaFalsi' (parse "x - 2") 1 5 )
+testRegula3 =  
+    -3 ~=? round (regulaFalsi' (parse "x + 3") (-5) 5 )
+testRegula4 =  
+    3 ~=? round (regulaFalsi' (parse "x - 3") (-5) 5 )
+testRegula5 =  
+    10 ~=? round (regulaFalsi' (parse "( x * 2) - 20") (-4) 24 )
+testRegula6 =  
+    0 ~=? round (regulaFalsi' (parse "x") (-4) 4 )
+testRegula7 =  
+    0 ~=? round (regulaFalsi' (parse "x^3 ") (-4) 4 )
+testRegula8 =  
+    0 ~=? round (regulaFalsi' (parse "x * x * x") (-4) 4 )
+testRegula9 =  
+    0 ~=? round (regulaFalsi' (parse "x^5") (-4) 4 )
+
+
+
+
 testRegulaPol = 
-    1 ~=? round (regulaFalsi' (parse "x^3 -1") (0) 2 )
-testRegulaPol2 =  
-    0 ~=? round (regulaFalsi' (parse "(0-1)*x^3")  (-2) 1 )
---testRegulaSqr =  Left "InvalidInput - a < b required" ~=? (regulaFalsi' (parse "x**2 + 2") (10) (-10) )
---testRegulaWIP =  Left "InvalidInput - f(a) < 0 and f(b) > 0 required!" ~=? (regulaFalsi' (parse "x**2 + 2") (-10) (10) )
+    1 ~=? round (regulaFalsi' (parse "(x^3) - 1") (-2) 3 )
+testRegulaPol2 = 
+    -1 ~=? round (regulaFalsi' (parse "(x^3) + 1") (-4) 3 )
+
+--testRegulaPol2 =  
+--   0 ~=? round (regulaFalsi' (parse "(0-1)*x^3")  (-2) 1 )
