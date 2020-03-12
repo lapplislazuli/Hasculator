@@ -42,18 +42,31 @@ parseShowTests = TestList [
     ,TestLabel "Reparse unary around unary" repUnUn
     ]
 
-repNum = (Numb 2) ~=? reparse (Numb 2)
-repVar = (Var "a") ~=? reparse (Var "a")
-repConst = (Const "e") ~=? reparse (Const "e")
+repNum = 
+    Numb 2 ~=? reparse (Numb 2)
+repVar = 
+    Var "a" ~=? reparse (Var "a")
+repConst = 
+    Const "e" ~=? reparse (Const "e")
 
-repAdd = (Add (Numb 2) (Var "a")) ~=? reparse (Add (Numb 2) (Var "a")) 
-repSub = (Sub (Numb 2) (Var "a")) ~=? reparse (Sub (Numb 2) (Var "a"))
-repMul = (Mul (Numb 2) (Var "a")) ~=? reparse (Mul (Numb 2) (Var "a"))
-repDiv = (Div (Numb 2) (Var "a")) ~=? reparse (Div (Numb 2) (Var "a"))
-repLn = (Ln (Var "a")) ~=? reparse (Ln (Var "a"))
-repExp = (Exp (Var "a")) ~=? reparse (Exp (Var "a"))
+repAdd = 
+    Add (Numb 2) (Var "a") ~=? reparse (Add (Numb 2) (Var "a")) 
+repSub = 
+    Sub (Numb 2) (Var "a") ~=? reparse (Sub (Numb 2) (Var "a"))
+repMul = 
+    Mul (Numb 2) (Var "a") ~=? reparse (Mul (Numb 2) (Var "a"))
+repDiv = 
+    Div (Numb 2) (Var "a") ~=? reparse (Div (Numb 2) (Var "a"))
+repLn = 
+    Ln (Var "a") ~=? reparse (Ln (Var "a"))
+repExp = 
+    Exp (Var "a") ~=? reparse (Exp (Var "a"))
 
-repUnUn = (Exp (Exp (Var "a"))) ~=? reparse (Exp (Exp (Var "a"))) 
-repUnBin = (Exp (Add (Var "a")(Numb 2))) ~=? reparse (Exp (Add (Var "a")(Numb 2)))
-repBinBin = (Add (Add (Var "a") (Numb 1)) (Sub (Var "b")(Numb 1))) ~=? reparse (Add (Add (Var "a") (Numb 1)) (Sub (Var "b")(Numb 1)))
-repBinUn = (Add (Ln (Var "a")) (Exp (Var "b"))) ~=? reparse (Add (Ln (Var "a")) (Exp (Var "b")))
+repUnUn = 
+    Exp (Exp (Var "a")) ~=? reparse (Exp (Exp (Var "a"))) 
+repUnBin = 
+    Exp (Add (Var "a")(Numb 2)) ~=? reparse (Exp (Add (Var "a")(Numb 2)))
+repBinBin = 
+    Add (Add (Var "a") (Numb 1)) (Sub (Var "b")(Numb 1)) ~=? reparse (Add (Add (Var "a") (Numb 1)) (Sub (Var "b")(Numb 1)))
+repBinUn = 
+    Add (Ln (Var "a")) (Exp (Var "b")) ~=? reparse (Add (Ln (Var "a")) (Exp (Var "b")))

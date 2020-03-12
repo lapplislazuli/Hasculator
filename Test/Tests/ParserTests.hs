@@ -32,30 +32,50 @@ coreParserTests = TestList [
    ]
 
 --Simple Parsing
-parSingleNumb = 1 ~=? (simParSolv "1")
-parSingleNumb2 =  (simParSolv "1") ~=? 1 
-parSingleVar  = 0 ~=? (simParSolv "a")
-parLongerVar  = 0 ~=? (simParSolv "long")
-parConst      = exp(1) ~=? (simParSolv "e")
-parConstExtra = 0 ~=? (simParSolv "ee")
+parSingleNumb = 
+    1 ~=? simpleParseAndSolve "1"
+parSingleNumb2 =  
+    simpleParseAndSolve "1" ~=? 1
+parSingleVar  = 
+    0 ~=? simpleParseAndSolve "a"
+parLongerVar  = 
+    0 ~=? simpleParseAndSolve "long"
+parConst      = 
+    exp 1 ~=? simpleParseAndSolve "e"
+parConstExtra = 
+    0 ~=? simpleParseAndSolve "ee"
 
-parBracketedNumb = 1 ~=? (simParSolv "( 1 )")
-parDoubleBracketedNumb = 1 ~=? (simParSolv "( ( 1 ) )")
+parBracketedNumb = 
+    1 ~=? simpleParseAndSolve "( 1 )"
+parDoubleBracketedNumb = 
+    1 ~=? simpleParseAndSolve "( ( 1 ) )"
 
 -- ErrorHandling
-lostBracket = ErrorTerm "LostClosingBracketErr" ~=? parse "1 )"
-lostBracket2 = ErrorTerm "LostClosingBracketErr" ~=? parse "1 ))"
-lostBracket3 = ErrorTerm "LostClosingBracketErr" ~=? parse "( 1 ) + a )"
-tooManyTerms = ErrorTerm "MissingOperatorErr" ~=? parse "1 a" 
-missingArgs = ErrorTerm "LostOperatorErr" ~=? parse "+"
-emptyTerm = ErrorTerm "EmptyTermErr" ~=? parse " "
-emptyBrackets = ErrorTerm "SafeRightErr" ~=? parse "( )"
+lostBracket = 
+    ErrorTerm "LostClosingBracketErr" ~=? parse "1 )"
+lostBracket2 = 
+    ErrorTerm "LostClosingBracketErr" ~=? parse "1 ))"
+lostBracket3 = 
+    ErrorTerm "LostClosingBracketErr" ~=? parse "( 1 ) + a )"
+tooManyTerms = 
+    ErrorTerm "MissingOperatorErr" ~=? parse "1 a" 
+missingArgs = 
+    ErrorTerm "LostOperatorErr" ~=? parse "+"
+emptyTerm = 
+    ErrorTerm "EmptyTermErr" ~=? parse " "
+emptyBrackets = 
+    ErrorTerm "SafeRightErr" ~=? parse "( )"
 
-openBrackets1 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( a + b "
-openBrackets3 = Add (Numb 1) (ErrorTerm "LostOpeningBracketErr") ~=? parse "( 1 ) + ( 4"
-openBrackets2 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( ( 1 )"
-openBrackets4 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( ( ( 1 "
-openBrackets5 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( 1 "
+openBrackets1 = 
+    ErrorTerm "LostOpeningBracketErr" ~=? parse "( a + b "
+openBrackets3 = 
+    Add (Numb 1) (ErrorTerm "LostOpeningBracketErr") ~=? parse "( 1 ) + ( 4"
+openBrackets2 = 
+    ErrorTerm "LostOpeningBracketErr" ~=? parse "( ( 1 )"
+openBrackets4 = 
+    ErrorTerm "LostOpeningBracketErr" ~=? parse "( ( ( 1 "
+openBrackets5 = 
+    ErrorTerm "LostOpeningBracketErr" ~=? parse "( 1 "
 
 tokenizerTests = TestList [
    TestLabel "NoSpaces I" testNsp1
@@ -68,14 +88,22 @@ tokenizerTests = TestList [
    ,TestLabel "Overfull Spaces II" testOfsp2
    ]
 
-testNsp1 = 3 ~=? (simParSolv "1+2")
-testNsp2 = 10 ~=? (simParSolv "(1+2*4)+1")
-testNsp3 = 16 ~=? (simParSolv "3*2+2*5")
-testMsp1 = 3 ~=? (simParSolv "1 +2")
-testMsp2 = 10 ~=? (simParSolv "(1+ 2* 4)+1 ")
-testFsp1 = 6 ~=? (simParSolv " 3 * 2 ")
-testOfsp1 = 10 ~=? (simParSolv "(1  + 2*  4) +1   ")
-testOfsp2 = 10 ~=? (simParSolv "   (    1+    2* 4   )    +1 ")
+testNsp1 = 
+    3 ~=? simpleParseAndSolve "1+2"
+testNsp2 = 
+    10 ~=? simpleParseAndSolve "(1+2*4)+1"
+testNsp3 = 
+    16 ~=? simpleParseAndSolve "3*2+2*5"
+testMsp1 = 
+    3 ~=? simpleParseAndSolve "1 +2"
+testMsp2 = 
+    10 ~=? simpleParseAndSolve "(1+ 2* 4)+1 "
+testFsp1 = 
+    6 ~=? simpleParseAndSolve " 3 * 2 "
+testOfsp1 = 
+    10 ~=? simpleParseAndSolve "(1  + 2*  4) +1   "
+testOfsp2 = 
+    10 ~=? simpleParseAndSolve "   (    1+    2* 4   )    +1 "
 
 
 
@@ -96,19 +124,31 @@ precedenceTests = TestList [
     
     ]
 
-testPS = 5 ~=? (simParSolv "1 + 2 * 2")
-testPP = 12 ~=? (simParSolv "3 * 2 ^ 2 ")
-testFPoi = (truncate' ((exp 3) * 3) 8) ~=? truncate' (simParSolv "Exp 3 * 3") 8
-testFPow = (truncate' ((exp 3) ** 2) 8) ~=? truncate' (simParSolv "Exp 3 ^ 2 ") 8
-testBU = truncate' (exp 3) 8 ~=? truncate' (simParSolv "Exp ( 1 + 2 )") 8
-testBB = 6 ~=? (simParSolv "( 1 + 1 ) * 3")
-testSES = 3 ~=? (simParSolv "2 + 2 - 1")
-testPEP = 8 ~=? (simParSolv "( 1 * 2 ) + ( 2 * 3 )")
+testPS = 
+    5 ~=? simpleParseAndSolve "1 + 2 * 2"
+testPP = 
+    12 ~=? simpleParseAndSolve "3 * 2 ^ 2 "
+testFPoi = 
+    truncate' (exp 3 * 3) 8 ~=? truncate' (simpleParseAndSolve "Exp 3 * 3") 8
+testFPow = 
+    truncate' (exp 3 ** 2) 8 ~=? truncate' (simpleParseAndSolve "Exp 3 ^ 2 ") 8
+testBU = 
+    truncate' (exp 3) 8 ~=? truncate' (simpleParseAndSolve "Exp ( 1 + 2 )") 8
+testBB = 
+    6 ~=? simpleParseAndSolve "( 1 + 1 ) * 3"
+testSES = 
+    3 ~=? simpleParseAndSolve "2 + 2 - 1"
+testPEP = 
+    8 ~=? simpleParseAndSolve "( 1 * 2 ) + ( 2 * 3 )"
 
-testNegSt = 1 ~=? simParSolv "!1+2"
-testNegPt = (-6) ~=? simParSolv "!2*3"
-testNegFn1 = ErrorTerm "MissingOperatorErr" ~=? parse "! Exp 0"
-testNegFn2 = ErrorTerm "MissingOperatorErr" ~=? parse "Exp ! 0.5" 
+testNegSt = 
+    1 ~=? simpleParseAndSolve "!1+2"
+testNegPt = 
+    (-6) ~=? simpleParseAndSolve "!2*3"
+testNegFn1 = 
+    ErrorTerm "MissingOperatorErr" ~=? parse "! Exp 0"
+testNegFn2 = 
+    ErrorTerm "MissingOperatorErr" ~=? parse "Exp ! 0.5" 
 
 negaterTests = TestList [
     TestLabel "Negate Positive Number" negPosNum
@@ -126,16 +166,28 @@ negaterTests = TestList [
     ,TestLabel "Negate Fn II" negFn2
     ]
 
-negPosNum = (-5) ~=? simParSolv "!5"
-negNegNum = 5   ~=? simParSolv "!(0-5)"
-negnegNum = 5   ~=? simParSolv "!(!5)"
-negVar    = (-3)   ~=? parSolv "!a" [("a",3)]
-negnegVar    = 3   ~=? parSolv "!(!a)" [("a",3)]
-negBrackets = (-4) ~=? simParSolv "!(4)"
-negZero = 0 ~=? simParSolv "!0"
+negPosNum = 
+    (-5) ~=? simpleParseAndSolve "!5"
+negNegNum = 
+    5 ~=? simpleParseAndSolve "!(0-5)"
+negnegNum = 
+    5 ~=? simpleParseAndSolve "!(!5)"
+negVar = 
+    (-3) ~=? parseAndSolve "!a" [("a",3)]
+negnegVar =
+    3 ~=? parseAndSolve "!(!a)" [("a",3)]
+negBrackets = 
+    (-4) ~=? simpleParseAndSolve "!(4)"
+negZero = 
+    0 ~=? simpleParseAndSolve "!0"
 
-negAdd = (-3) ~=? simParSolv "!(1+2)"
-negSub = 3 ~=? simParSolv "!(1-4)"
-negMul = (-6) ~=? simParSolv "!(2*3)"
-negFn1 = (-1) ~=? simParSolv "!(Exp 0)" 
-negFn2 = (-1) ~=? simParSolv "!(Ln e)"
+negAdd = 
+    (-3) ~=? simpleParseAndSolve "!(1+2)"
+negSub = 
+    3 ~=? simpleParseAndSolve "!(1-4)"
+negMul = 
+    (-6) ~=? simpleParseAndSolve "!(2*3)"
+negFn1 =
+    (-1) ~=? simpleParseAndSolve "!(Exp 0)" 
+negFn2 = 
+    (-1) ~=? simpleParseAndSolve "!(Ln e)"

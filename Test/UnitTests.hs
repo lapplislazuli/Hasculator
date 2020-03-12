@@ -41,8 +41,13 @@ specialTests = TestList [
 
 -- All Originate from problems with the brackets
 -- The first two usually resolved as follows ( Exp (1 + 2 ) + 3 ) = Exp 6 (Which is wrong btw)
-testGF1 = (truncate' ((exp 3) + 3) 8) ~=? truncate' (simParSolv "( Exp ( 1 + 2 ) + 3 )") 8
-testGF2 = (truncate' ((log 3) * 3) 8) ~=? truncate' (simParSolv "( ( Ln ( 1 + 2 ) ) * 3 ) ") 8
-testUnBr = 5 ~=? simParSolv "( ( 1 + ( 2 ) ) ) + ( 1 + ( ( 1 ) + ( 0 ) ) )"
-testLongLostBR = ErrorTerm "LostClosingBracketErr" ~=? parse "( ( ( 1 + ( 1 + 0 ) ) ) + ( 2 ) ) )"
-testLongLostBR2 = ErrorTerm "LostOpeningBracketErr" ~=? parse "( ( ( ( ( 1 + ( 1 + 0 ) ) ) + ( 2 ) ) )"
+testGF1 = 
+    truncate' (exp 3 + 3) 8 ~=? truncate' (simpleParseAndSolve "( Exp ( 1 + 2 ) + 3 )") 8
+testGF2 = 
+    truncate' (log 3 * 3) 8 ~=? truncate' (simpleParseAndSolve "( ( Ln ( 1 + 2 ) ) * 3 ) ") 8
+testUnBr = 
+    5 ~=? simpleParseAndSolve "( ( 1 + ( 2 ) ) ) + ( 1 + ( ( 1 ) + ( 0 ) ) )"
+testLongLostBR = 
+    ErrorTerm "LostClosingBracketErr" ~=? parse "( ( ( 1 + ( 1 + 0 ) ) ) + ( 2 ) ) )"
+testLongLostBR2 = 
+    ErrorTerm "LostOpeningBracketErr" ~=? parse "( ( ( ( ( 1 + ( 1 + 0 ) ) ) + ( 2 ) ) )"

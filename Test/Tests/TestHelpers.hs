@@ -18,14 +18,14 @@ import Differentiator
 ------------------------------------ 
 
 simpSolDifPar s = solDifPar s []
-solDifPar s vars = solve ((dx . parse) s) vars 
+solDifPar s = solve ((dx . parse) s) 
 
 --These methods shorthand some tests
-parSolv :: String -> [(String, Double)] -> Double
-parSolv str vars = solve (parse str) vars
+parseAndSolve :: String -> [(String, Double)] -> Double
+parseAndSolve str = solve (parse str)
 --Solves the Term for no-Variables (or every Variable 0)
-simParSolv :: String -> Double 
-simParSolv str = (parSolv str []) 
+simpleParseAndSolve :: String -> Double 
+simpleParseAndSolve str = parseAndSolve str []
 
 reparse :: Term -> Term 
 reparse = parse . show
@@ -38,5 +38,5 @@ removeErrDouble (Right d) = d
 removeErrDouble (Left e) = error e 
 
 truncate' :: Double -> Int -> Double
-truncate' x n = (fromIntegral (floor (x * t))) / t
+truncate' x n = fromIntegral (floor (x * t)) / t
     where t = 10^n

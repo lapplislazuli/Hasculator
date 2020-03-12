@@ -23,24 +23,40 @@ coreDifferTests = TestList [
     ,TestLabel "Simple Ln III" testDfLn3 
     ]
 
-testDFVar1 = 0 ~=? simpSolDifPar "2"
-testDFVar2 = 0 ~=? simpSolDifPar "2*4 + 2 + 4*2"
-testDfLin1 = 1 ~=? simpSolDifPar "x"
-testDfLin2 = 1 ~=? simpSolDifPar "x+2"
-testDfLin3 = (-1) ~=? simpSolDifPar "2-x"
-testLinWV = 0 ~=? simpSolDifPar "y"
+testDFVar1 = 
+    0 ~=? simpSolDifPar "2"
+testDFVar2 = 
+    0 ~=? simpSolDifPar "2*4 + 2 + 4*2"
+testDfLin1 = 
+    1 ~=? simpSolDifPar "x"
+testDfLin2 = 
+    1 ~=? simpSolDifPar "x+2"
+testDfLin3 = 
+    (-1) ~=? simpSolDifPar "2-x"
+testLinWV = 
+    0 ~=? simpSolDifPar "y"
 
-testDFConst1 = 0 ~=? simpSolDifPar "e"
-testDFConst2 = 1 ~=? simpSolDifPar "e+x"
-testDFConst3 = (truncate' (exp 1) 6) ~=? (truncate' (simpSolDifPar "e*x") 6)
-testDFConst4 = 0 ~=? simpSolDifPar "e+e"
-testDFConst5 = 0 ~=? simpSolDifPar "e*e"
+testDFConst1 = 
+    0 ~=? simpSolDifPar "e"
+testDFConst2 = 
+    1 ~=? simpSolDifPar "e+x"
+testDFConst3 = 
+    truncate' (exp 1) 6 ~=? truncate' (simpSolDifPar "e*x") 6
+testDFConst4 = 
+    0 ~=? simpSolDifPar "e+e"
+testDFConst5 = 
+    0 ~=? simpSolDifPar "e*e"
 
-testDfExp1 = 0 ~=? truncate' (simpSolDifPar "Exp 1") 8
-testDfExp2 = truncate' ((exp 2)) 8 ~=? truncate' (solDifPar "Exp x" [("x",2.0)]) 8
-testDfLn1 = 0 ~=? simpSolDifPar "Ln 3"
-testDfLn2 = 1 ~=? solDifPar "Ln x" [("x",1.0)]
-testDfLn3 = 0.5 ~=? solDifPar "Ln x" [("x",2.0)]
+testDfExp1 = 
+    0 ~=? truncate' (simpSolDifPar "Exp 1") 8
+testDfExp2 = 
+    truncate' (exp 2) 8 ~=? truncate' (solDifPar "Exp x" [("x",2.0)]) 8
+testDfLn1 = 
+    0 ~=? simpSolDifPar "Ln 3"
+testDfLn2 = 
+    1 ~=? solDifPar "Ln x" [("x",1.0)]
+testDfLn3 = 
+    0.5 ~=? solDifPar "Ln x" [("x",2.0)]
 
 extendedDifferTests = TestList [
     TestLabel "Coefficient I" testDFCoeff1
@@ -58,15 +74,26 @@ extendedDifferTests = TestList [
     ,TestLabel "Div III" testDFDif3
     ]
 
-testDFCoeff1 = 2 ~=? simpSolDifPar "2 * x"
-testDFCoeff2 = (-1) ~=? simpSolDifPar "(0-1) * x"
-testDFCoeff3 = 2 ~=? solDifPar "a * x" [("a",2.0)] 
-testDFPow1 = 4 ~=? solDifPar "x^2" [("x",2.0)]
-testDFPow2 = 12 ~=? solDifPar "x^3" [("x",2.0)]
-testDFPow3 = 12 ~=? solDifPar "x^a" [("x",2.0),("a",3)]
-testDFPow4 = 0 ~=? simpSolDifPar "a^5"
-testDFPow5 = 0 ~=? simpSolDifPar "2^5"
+testDFCoeff1 = 
+    2 ~=? simpSolDifPar "2 * x"
+testDFCoeff2 = 
+    (-1) ~=? simpSolDifPar "(0-1) * x"
+testDFCoeff3 = 
+    2 ~=? solDifPar "a * x" [("a",2.0)] 
+testDFPow1 = 
+    4 ~=? solDifPar "x^2" [("x",2.0)]
+testDFPow2 = 
+    12 ~=? solDifPar "x^3" [("x",2.0)]
+testDFPow3 = 
+    12 ~=? solDifPar "x^a" [("x",2.0),("a",3)]
+testDFPow4 = 
+    0 ~=? simpSolDifPar "a^5"
+testDFPow5 = 
+    0 ~=? simpSolDifPar "2^5"
 
-testDFDif1 = -0.25 ~=? solDifPar "1/x" [("x",2.0)]
-testDFDif2 = truncate' (-(0.5)) 6 ~=? truncate' (solDifPar "1/(2*x)" [("x",1.0)]) 6
-testDFDif3 = truncate' (-(0.125)) 6 ~=? truncate' (solDifPar "1/(2*x)" [("x",2.0)]) 6
+testDFDif1 = 
+    -0.25 ~=? solDifPar "1/x" [("x",2.0)]
+testDFDif2 = 
+    truncate' (-0.5) 6 ~=? truncate' (solDifPar "1/(2*x)" [("x",1.0)]) 6
+testDFDif3 = 
+    truncate' (-0.125) 6 ~=? truncate' (solDifPar "1/(2*x)" [("x",2.0)]) 6
