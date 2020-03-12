@@ -116,10 +116,7 @@ applyBinary a op b =
 tokenToOperator :: Token -> Either Operator Token
 tokenToOperator t = 
     let mop = lookup t ( map (\(a,b,c) -> (a,b)) dictionary)
-    in 
-        if isNothing mop
-        then Right t 
-        else Left (fromJust mop)
+    in maybe (Right t) Left mop
 
 detectVarsAndNumbers :: [Either Operator Token] -> [Parsable]
 detectVarsAndNumbers = map f  
@@ -132,7 +129,7 @@ tokenToTerm tok@(s:ss)
             | tok `elem` map fst constants    = Const tok
             | otherwise                       = Var tok
 
--- Assings the priority of each Term or Operator to it
+-- Assigns the priority of each Term or Operator to it
 precedence :: Parsable -> (Natural, Parsable)
 precedence o = (priorityOf o,o)
     where 

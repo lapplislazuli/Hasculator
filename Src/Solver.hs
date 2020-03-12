@@ -19,10 +19,10 @@ failableRegulaFalsi t i a b
     |   f a > 0 || f b < 0 = Left "InvalidInput - f(a) < 0 and f(b) > 0 required!"
     |   otherwise = Right (regulaFalsi f i a b) 
     where f  = fx t
+
 -- https://en.wikipedia.org/wiki/False_position_method
 -- Params: Term (With x), Iterations , A, B 
 -- Output: xKoord of 0-Point
-
 regulaFalsi :: (Double -> Double) -> Int -> Double -> Double -> Double
 -- end-step: all iterations taken
 regulaFalsi f 0 a b
