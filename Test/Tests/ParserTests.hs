@@ -29,6 +29,9 @@ coreParserTests = TestList [
    ,TestLabel "Lost second Opening Brackets" openBrackets3
    ,TestLabel "Multiple lost open Brackets" openBrackets4
    ,TestLabel "Open Br -> Term" openBrackets5
+
+   ,TestLabel "Sinus parsed" parSins
+   ,TestLabel "Cosinus parsed" parCos
    ]
 
 --Simple Parsing
@@ -77,6 +80,12 @@ openBrackets4 =
 openBrackets5 = 
     ErrorTerm "LostOpeningBracketErr" ~=? parse "( 1 "
 
+parSins = 
+    Sin (Numb 3) ~=? parse "Sin 3"
+parCos =
+    Cos (Numb 3) ~=? parse "Cos 3"
+
+
 tokenizerTests = TestList [
    TestLabel "NoSpaces I" testNsp1
    ,TestLabel "NoSpaces II" testNsp2
@@ -121,7 +130,8 @@ precedenceTests = TestList [
     ,TestLabel "Negate > Point"      testNegPt
     ,TestLabel "Negate = Fns I "      testNegFn1
     ,TestLabel "Negate = Fns II"      testNegFn2
-    
+
+    ,TestLabel "Sinus stronger than +" testSinPlus
     ]
 
 testPS = 
@@ -149,6 +159,9 @@ testNegFn1 =
     ErrorTerm "MissingOperatorErr" ~=? parse "! Exp 0"
 testNegFn2 = 
     ErrorTerm "MissingOperatorErr" ~=? parse "Exp ! 0.5" 
+
+testSinPlus = 
+    Add (Sin (Numb 3)) (Numb 3) ~=? parse "Sin 3 + 3"
 
 negaterTests = TestList [
     TestLabel "Negate Positive Number" negPosNum

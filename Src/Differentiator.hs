@@ -16,6 +16,8 @@ diff t c=
             Ln t -> Div (diff t c) t
             Exp t -> Mul (Sub t (Numb 1)) (Exp t)
             Pow a b -> diff (Exp (Mul b (Ln a))) c
+            Sin a -> Mul (Cos a) (diff a c)
+            Cos a -> Mul (negateTerm (Sin a)) (diff a c)
             Const c -> Numb 0
             Numb n -> Numb 0
             Var v -> diffVariable v c

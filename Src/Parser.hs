@@ -20,12 +20,13 @@ type Parsed = Either String Term-- TODO: Maybe use ErrorMonad?
 
 data Operator = Plus | StarStar | Star
                 | DivSlash | LnE | ExpFn
+                | SinT | CosT
                 | Minus | Neg | Lbr | Rbr
                 deriving (Eq,Show)           
 
 --TODO: Maybe use different datatype? Map? Array?
 dictionary :: [(Token,Operator,Natural)]
-dictionary = [("(",Lbr,2),(")",Rbr,2),("!",Neg,3),("Ln",LnE,3),("Exp",ExpFn,3),("^",StarStar,3),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
+dictionary = [("(",Lbr,2),(")",Rbr,2),("!",Neg,3),("Ln",LnE,3),("Exp",ExpFn,3),("^",StarStar,3),("Sin",SinT,4),("Cos",CosT,4),("*",Star,6),("/",DivSlash,6),("+",Plus,9),("-",Minus,9)]
 
 cleanTermify :: Parsed -> Term
 cleanTermify (Left err) = ErrorTerm err 
@@ -74,7 +75,7 @@ termify toks
                         termify (lhs' ++ [Right step] ++ rhs')
     where 
        binaries = [Plus,Minus,Star,StarStar,DivSlash] 
-       unaries  = [Neg,LnE,ExpFn]
+       unaries  = [Neg,LnE,ExpFn,SinT,CosT]
        -- I split the List by the Lefthandside (LHS), Operator and Righthandside (RHS)
        (lhs,next,rhs) = splitByFirst toks
 
@@ -98,6 +99,8 @@ applyUnary op t =
         Neg     -> negateTerm t
         LnE     -> Ln  t 
         ExpFn   -> Exp t
+        SinT    -> Sin t 
+        CosT    -> Cos t
         -- Additional Unary Operators
 
 applyBinary :: Term -> Operator -> Term -> Term 

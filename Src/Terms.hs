@@ -20,6 +20,8 @@ data Term = Add Term Term
             | Exp Term
             | Pow Term Term
             | Numb Double
+            | Sin Term
+            | Cos Term
             | Const String
             | Var String
             | ErrorTerm String
@@ -38,6 +40,8 @@ solve t vars =
         Numb n -> n 
         Const c -> catchEmpty (resolveConstant c)
         Var v -> catchEmpty (resolveVariable v vars)
+        Sin u -> sin (solve u vars)
+        Cos u -> cos (solve u vars)
         ErrorTerm _ -> 0
 
 simplify :: Term -> Term
@@ -68,8 +72,11 @@ simplify t =
             (Mul a b)   -> Mul (simplify a) (simplify b)
             (Div a b)   -> Div (simplify a) (simplify b)
             (Pow a b)   -> Pow (simplify a) (simplify b)
-            (Ln t)      -> Ln (simplify t)
-            (Exp t)     -> Exp (simplify t)
+            (Ln u)      -> Ln (simplify u)
+            (Exp u)     -> Exp (simplify u)
+            (Sin u)     -> Sin (simplify u)
+            (Cos u)     -> Cos (simplify u)
+            _   -> t
 
 extractVariables :: Term -> [String]
 extractVariables (Var c) = [c]
@@ -120,6 +127,8 @@ instance Show Term where
              Pow a b -> binaryShowHelper "^" a b 
              Ln t -> unaryShowHelper "Ln" t 
              Exp t -> unaryShowHelper "Exp" t
+             Sin t -> unaryShowHelper "sin" t
+             Cos t -> unaryShowHelper "cos" t
         where 
             binaryShowHelper :: String -> Term -> Term -> String 
             binaryShowHelper op a b = "("++ show a ++ op ++ show b ++ ")"
