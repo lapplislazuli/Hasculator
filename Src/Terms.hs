@@ -1,4 +1,5 @@
 -- This Module defines my own Datatype Term
+-- and its most important methods for solving, handling variables and simplifications
 
 module Terms 
     (
@@ -27,7 +28,21 @@ data Term = Add Term Term
             | ErrorTerm String
             deriving (Eq)
 
-solve :: Term -> [(String,Double)]-> Double
+-- | This method solves a given Term for a given set of variables. 
+-- For any occuring variable where no value is passed, it treats the variable as 0 
+-- For any erronous Term (such as, if a parsing error occurred), it returns 0
+-- This behavior of error-terms and not-defined variables is applied at the bottom most level first, it tries to "heal" as much as possible.
+-- Examples of healing: 
+-- @
+-- t <- parse "a + (1 -"
+-- solve t [(a,5)] 
+-- 5
+-- @
+-- 
+-- For all mathematical operators and methods the base-library pardons have been used. 
+solve :: Term               -- ^ The Term to solve 
+    -> [(String,Double)]    -- ^ A list of its variables and their values 
+    -> Double               -- ^ The result of the Term, if all variables are 
 solve t vars = 
     case t of
         Add a b -> solve a vars + solve b vars
@@ -44,13 +59,23 @@ solve t vars =
         Cos u -> cos (solve u vars)
         ErrorTerm _ -> 0
 
+-- | This method tries to simplify a Term using algebraic identity laws. 
+-- It is quite verbatim, but most cases are trivial. 
+-- 
+-- The first checked case is whether the Term has no variables - than it can simply be solved and returned. 
+-- In case the term has variables, it tries to apply simple rules with pattern matches, 
+-- such as "a + 0 = a" or "b * 1 = b"
+-- In case no such pattern is found, the simplification is applied to both branches of the trees, possibly simplifying them.
+-- A list of identities is found on Wikipedia (https://en.wikipedia.org/wiki/Identity_(mathematics)), but not all of those are useful for simplification.
+--
+-- This method should be applied multiple times as it performs only local optimization, and should be repeated until the Term does not change anymore. 
 simplify :: Term -> Term
 simplify t = 
     if not (hasVariables t)
     then Numb (solve t [])
     else 
         case t of
-            -- Basics 
+            -- Basics, to catch trivial end-cases
             (Var c) -> Var c 
             (Const c) -> Const c 
             (Numb i) -> Numb i
@@ -63,21 +88,37 @@ simplify t =
             (Mul (Numb 0) t)    -> Numb 0
             (Pow _ (Numb 0))    -> Numb 1
             (Pow t (Numb 1))    ->  t
+            (Pow (Numb 1) _)    -> Numb 1 
             (Ln (Numb 1))       -> Numb 0
             (Div a (Numb 1))    -> a 
             (Div (Numb 0) _ )   -> Numb 0 
-            -- No Shortcuts found - go one layer deeper
-            (Add a b)   -> Add (simplify a) (simplify b)
-            (Sub a b)   -> Sub (simplify a) (simplify b)
+            -- Shortcuts including one layer lower evaluation
+            (Sub a b)   -> let  a' = simplify a 
+                                b' = simplify b 
+                            in  if a' == b' 
+                                then Numb 0 
+                                else Sub a' b'
+            (Div a b)   -> let  a' = simplify a 
+                                b' = simplify b 
+                            in  if a' == b' 
+                                then Numb 1 
+                                else Div a' b'
+            -- No further shortcuts - simply simplify the arguments 
             (Mul a b)   -> Mul (simplify a) (simplify b)
-            (Div a b)   -> Div (simplify a) (simplify b)
             (Pow a b)   -> Pow (simplify a) (simplify b)
+            (Add a b)   ->  Add (simplify a) (simplify b)      
             (Ln u)      -> Ln (simplify u)
             (Exp u)     -> Exp (simplify u)
             (Sin u)     -> Sin (simplify u)
             (Cos u)     -> Cos (simplify u)
-            _   -> t
+            _   -> t -- This wildcard helps to add further operators without rewriting code or running into a pattern-match error - it should be kept. 
 
+-- | This method runs over a term and finds every occurence of a variable.
+-- It does so in a left-to-right fashion. 
+-- Variables which occur twice in the Term occur twice in the list.
+-- 
+-- It does not return a set, as for example the global occurence of a variable could disturb local simplification.
+-- Also, building a set from a string is easy if required. 
 extractVariables :: Term -> [String]
 extractVariables (Var c) = [c]
 extractVariables (Numb _) = [] -- Any Value that is not a variable will yield []
@@ -106,6 +147,7 @@ resolveVariable i ((c,v):vs) =
     then Just v 
     else resolveVariable i vs
     
+-- | This method resolves unknown and empty Variables to a value of 0
 catchEmpty :: Maybe Double -> Double
 catchEmpty Nothing = 0
 catchEmpty (Just a) = a
